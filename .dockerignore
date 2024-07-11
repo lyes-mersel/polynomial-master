@@ -1,0 +1,15 @@
+# The compiled program
+program.exe
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Git
+.git
+
+# Read me
+README.md
+
+# misc
+.DS_Store

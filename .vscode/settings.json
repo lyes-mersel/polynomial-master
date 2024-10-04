@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "sdl.h": "c",
+        "stdlib.h": "c",
+        "logic_lib.h": "c",
+        "terminal_mode.h": "c",
+        "graphic_mode.h": "c",
+        "graphic_lib.h": "c",
+        "sdl_ttf.h": "c"
+    }
+}

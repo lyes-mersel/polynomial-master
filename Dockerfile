@@ -2,13 +2,13 @@ FROM ubuntu:20.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN apt update
-RUN apt install -y \
+RUN apt-get update
+RUN apt-get install -y \
     gcc \
     libsdl2-dev \
     libsdl2-ttf-dev \
     libsdl2-image-dev
-RUN apt clean
+RUN apt-get clean
 
 ENV DISPLAY=host.docker.internal:0
 

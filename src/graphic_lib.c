@@ -1,52 +1,8 @@
-#ifndef __BIBLIO_Graphique__
-#define __BIBLIO_Graphique__
-
-#include "Biblio.h"
-/********************************************************************************/
-/*                        Déclaration des structures                            */
-/********************************************************************************/
-
-#define WINDOW_WIDTH1 1280
-#define WINDOW_HEIGHT1 720
-#define FPS_LIMIT 50 // (50 milisecondes ==> 20 images par seconde ==> 20FPS)
-/*  servira a limiter la vitesse de la diffusion des images 
-    c.à.dire : ne pas utiliser toute la puissance du processeur   */
+#include "graphic_lib.h"
 
 SDL_Color NOIR = {0, 0, 0}, BLANC = {255, 255, 255};
 SDL_Color BLEU = {50, 60, 200}, VERT = {30, 153, 67};
 SDL_Color ORANGE = {255, 120, 20};
-
-
-
-/********************************************************************************/
-/*                        Déclaration des fonctions                            */
-/********************************************************************************/
-
-void SDL_ExitWithError(const char message[]);
-void limiter_FPS(unsigned int limit);
-void dessiner_ligne(SDL_Renderer *rendu,float x1, float y1, float x2, float y2);
-void dessiner_point(SDL_Renderer *rendu, float x1, float y1);
-void dessiner_rectangle(SDL_Renderer *rendu, int x, int y, int largeur, int hauteur);
-void dessiner_rectangle_5(SDL_Renderer *rendu, int x, int y, int largeur, int hauteur);
-void dessiner_courbe_1(Monome *P_tete);
-
-int SDL_lire_entier(int *nombre, SDL_Renderer *rendu, SDL_Surface **page, int X, int Y);
-int SDL_lire_reel(float *nombre, SDL_Renderer *rendu, SDL_Surface **page, int X, int Y);
-
-void ajout_new_polynome_2D(SDL_Renderer *rendu, LLC_Poly **Tete_Ensemble);
-void afficher_liste_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble);
-void supprimer_polynome_2D(SDL_Renderer *rendu, LLC_Poly **Tete_Ensemble);
-void copier_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble);
-void simplifier_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble);
-void evaluer_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble);
-void addition_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble);
-void soustraction_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble);
-void multiplication_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble);
-void division_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble);
-void deriver_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble);
-void integrer_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble);
-void dessiner_courbe_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble);
-void application_CRC_2D(SDL_Renderer *rendu);
 
 /********************************************************************************/
 /*                Procédure d'implémentation de la bibliothèque                 */
@@ -72,6 +28,13 @@ void limiter_FPS(unsigned int limit)
     else
         SDL_Delay(limit - ticks);
     return;
+}
+
+/********************************************************************************/
+SDL_bool isMouseInsideRect(int mouseX, int mouseY, Rectangle rect)
+{
+    return (mouseX > rect.x1 && mouseX < rect.x2 &&
+            mouseY > rect.y1 && mouseY < rect.y2);
 }
 
 /********************************************************************************/
@@ -129,7 +92,7 @@ void dessiner_rectangle_5(SDL_Renderer *rendu, int x, int y, int largeur, int ha
 }
 
 /********************************************************************************/
-//Dessiner la courbe d'un polynome (Utilisé durant le passage par Terminal)
+// Dessiner la courbe d'un polynome (Utilisé durant le passage par Terminal)
 void dessiner_courbe_1(Monome *P_tete)
 {
     SDL_Window *window = NULL;
@@ -137,7 +100,7 @@ void dessiner_courbe_1(Monome *P_tete)
     SDL_Surface *image = NULL;
     SDL_Texture *texture = NULL;
 
-    //Initialisation du programme   (Lancement SDL)
+    // Initialisation du programme   (Lancement SDL)
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
         SDL_ExitWithError("Initialisation SDL");
 
@@ -153,8 +116,8 @@ void dessiner_courbe_1(Monome *P_tete)
         SDL_ExitWithError("Création Rendu échouée");
 
     /*****************************************************************************/
-    //Surface + Texture
-    image = SDL_LoadBMP("images/courbe1.bmp");
+    // Surface + Texture
+    image = SDL_LoadBMP("assets/images/courbe1.bmp");
     if (image == NULL)
         SDL_ExitWithError("Impossible de charger l'image");
 
@@ -186,8 +149,8 @@ void dessiner_courbe_1(Monome *P_tete)
     if (SDL_SetRenderDrawColor(rendu, 255, 20, 20, SDL_ALPHA_OPAQUE) != 0)
         SDL_ExitWithError("Impossible de changer la couleur au Rendu");
 
-    float x, y = 0;      //Les coordonnées de chaque point en (cm)
-    int Xp, Yp, cpt = 0; //Les coordonnées convertis en pixels
+    float x, y = 0;      // Les coordonnées de chaque point en (cm)
+    int Xp, Yp, cpt = 0; // Les coordonnées convertis en pixels
 
     for (x = -10; x <= 10; x += 0.001)
     {
@@ -236,14 +199,8 @@ void dessiner_courbe_1(Monome *P_tete)
 
 /********************************************************************************/
 
-
-
-
-
-
-
 /********************************************************************************/
-// Ce module s'occuped de la lecture des long long > 0 
+// Ce module s'occuped de la lecture des long long > 0
 // Une fois la lecture terminée il renvoie 0, et renvoie (-1) aux cas ou l'utilisateur veut quitter la page
 int SDL_lire_long_long(long long *nombre, SDL_Renderer *rendu, SDL_Surface **page, int X, int Y)
 {
@@ -255,8 +212,9 @@ int SDL_lire_long_long(long long *nombre, SDL_Renderer *rendu, SDL_Surface **pag
     SDL_bool lecture = SDL_TRUE, rendu_modifie = SDL_TRUE, lecture_faite = SDL_FALSE;
     unsigned int temps_limite = 0, cpt = 0;
     char chiffres[50] = "";
+    Rectangle boutton_retour = {3, 100, 260, 632, 687, SDL_FALSE};
 
-    police3 = TTF_OpenFont("polices/times.ttf", 30);
+    police3 = TTF_OpenFont("assets/polices/times.ttf", 30);
     if (police3 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -290,10 +248,25 @@ int SDL_lire_long_long(long long *nombre, SDL_Renderer *rendu, SDL_Surface **pag
             rendu_modifie = SDL_FALSE;
         }
 
-        if ((Evenement.motion.x < 260) && (Evenement.motion.x > 100) && (Evenement.motion.y < 687) && (Evenement.motion.y > 632))
+        // Dessiner une bordure rouge si le boutton de retour est survolé
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_bool stateChanged = SDL_FALSE;
+        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+        if (currentlyInside != boutton_retour.mouseInside)
         {
-            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-            rendu_modifie = SDL_TRUE;
+            boutton_retour.mouseInside = currentlyInside;
+            stateChanged = SDL_TRUE;
+        }
+        if (stateChanged)
+        {
+            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+
+            if (boutton_retour.mouseInside)
+            {
+                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+            }
             SDL_RenderPresent(rendu);
         }
 
@@ -366,7 +339,6 @@ int SDL_lire_long_long(long long *nombre, SDL_Renderer *rendu, SDL_Surface **pag
                     SDL_RenderPresent(rendu);
                     break;
 
-                
                 case SDLK_BACKSPACE:
                     *nombre = (*nombre / 10);
                     if (cpt != 0)
@@ -465,9 +437,10 @@ int SDL_lire_entier(int *nombre, SDL_Renderer *rendu, SDL_Surface **page, int X,
     SDL_Rect position_texte, position_textures;
     SDL_bool lecture = SDL_TRUE, rendu_modifie = SDL_TRUE, lecture_faite = SDL_FALSE;
     unsigned int temps_limite = 0, a = 1, cpt = 0;
-    char  chiffres [30] = "";
+    char chiffres[30] = "";
+    Rectangle boutton_retour = {3, 100, 260, 632, 687, SDL_FALSE};
 
-    police3 = TTF_OpenFont("polices/times.ttf", 30);
+    police3 = TTF_OpenFont("assets/polices/times.ttf", 30);
     if (police3 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -493,7 +466,7 @@ int SDL_lire_entier(int *nombre, SDL_Renderer *rendu, SDL_Surface **page, int X,
     while (lecture)
     {
         temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
-        
+
         if (rendu_modifie)
         {
             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
@@ -501,10 +474,25 @@ int SDL_lire_entier(int *nombre, SDL_Renderer *rendu, SDL_Surface **page, int X,
             rendu_modifie = SDL_FALSE;
         }
 
-        if ((Evenement.motion.x < 260) && (Evenement.motion.x > 100) && (Evenement.motion.y < 687) && (Evenement.motion.y > 632))
+        // Dessiner une bordure rouge si le boutton de retour est survolé
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_bool stateChanged = SDL_FALSE;
+        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+        if (currentlyInside != boutton_retour.mouseInside)
         {
-            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-            rendu_modifie = SDL_TRUE;
+            boutton_retour.mouseInside = currentlyInside;
+            stateChanged = SDL_TRUE;
+        }
+        if (stateChanged)
+        {
+            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+
+            if (boutton_retour.mouseInside)
+            {
+                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+            }
             SDL_RenderPresent(rendu);
         }
 
@@ -513,7 +501,7 @@ int SDL_lire_entier(int *nombre, SDL_Renderer *rendu, SDL_Surface **page, int X,
             switch (Evenement.type)
             {
             case SDL_KEYDOWN:
-                if (position_texte.x == X)   // La premiere chose à lire
+                if (position_texte.x == X) // La premiere chose à lire
                 {
                     if ((Evenement.key.keysym.sym == SDLK_MINUS) || (Evenement.key.keysym.sym == SDLK_KP_MINUS))
                     {
@@ -930,7 +918,6 @@ int SDL_lire_entier(int *nombre, SDL_Renderer *rendu, SDL_Surface **page, int X,
             SDL_ExitWithError("Impossible de copier la texture dans le rendu");
         SDL_RenderPresent(rendu);
     }
-    
 
     TTF_CloseFont(police3);
     SDL_FreeSurface(texte);
@@ -956,8 +943,9 @@ int SDL_lire_reel(float *nombre, SDL_Renderer *rendu, SDL_Surface **page, int X,
     unsigned int temps_limite = 0;
     int a = 1, cpt1 = 0, cpt2 = 0, entier = 0;
     char chiffres[50] = "";
+    Rectangle boutton_retour = {3, 100, 260, 632, 687, SDL_FALSE};
 
-    police3 = TTF_OpenFont("polices/times.ttf", 30);
+    police3 = TTF_OpenFont("assets/polices/times.ttf", 30);
     if (police3 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -991,10 +979,25 @@ int SDL_lire_reel(float *nombre, SDL_Renderer *rendu, SDL_Surface **page, int X,
             rendu_modifie = SDL_FALSE;
         }
 
-        if ((Evenement.motion.x < 260) && (Evenement.motion.x > 100) && (Evenement.motion.y < 687) && (Evenement.motion.y > 632))
+        // Dessiner une bordure rouge si le boutton de retour est survolé
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_bool stateChanged = SDL_FALSE;
+        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+        if (currentlyInside != boutton_retour.mouseInside)
         {
-            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-            rendu_modifie = SDL_TRUE;
+            boutton_retour.mouseInside = currentlyInside;
+            stateChanged = SDL_TRUE;
+        }
+        if (stateChanged)
+        {
+            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+
+            if (boutton_retour.mouseInside)
+            {
+                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+            }
             SDL_RenderPresent(rendu);
         }
 
@@ -1088,7 +1091,7 @@ int SDL_lire_reel(float *nombre, SDL_Renderer *rendu, SDL_Surface **page, int X,
                     break;
 
                 case SDLK_1:
-                    if (cpt2 == 0)  // La partie entière
+                    if (cpt2 == 0) // La partie entière
                     {
                         *nombre *= 10;
                         *nombre += 1;
@@ -1104,7 +1107,7 @@ int SDL_lire_reel(float *nombre, SDL_Renderer *rendu, SDL_Surface **page, int X,
                             SDL_ExitWithError("Impossible de copier la texture dans le rendu");
                         SDL_RenderPresent(rendu);
                     }
-                    else    // La partie decimale
+                    else // La partie decimale
                     {
                         *nombre += 1 * powf(10, -(float)cpt2);
                         chiffres[cpt1 + cpt2] = '1';
@@ -1765,7 +1768,7 @@ int SDL_lire_reel(float *nombre, SDL_Renderer *rendu, SDL_Surface **page, int X,
                             SDL_RenderPresent(rendu);
                         }
                     }
-                    else    // cpt2 > 0
+                    else // cpt2 > 0
                     {
                         cpt2--;
                         *nombre *= powf(10, (float)cpt2);
@@ -1793,7 +1796,7 @@ int SDL_lire_reel(float *nombre, SDL_Renderer *rendu, SDL_Surface **page, int X,
                         if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                             SDL_ExitWithError("Impossible de copier la texture dans le rendu");
                         SDL_RenderPresent(rendu);
-                    }                    
+                    }
                     break;
 
                 case SDLK_RETURN:
@@ -1861,30 +1864,30 @@ int SDL_lire_reel(float *nombre, SDL_Renderer *rendu, SDL_Surface **page, int X,
 /********************************************************************************/
 void ajout_new_polynome_2D(SDL_Renderer *rendu, LLC_Poly **Tete_Ensemble)
 {
-    Monome *Tete_Poly1 = NULL , *M = NULL, *N = NULL;
+    Monome *Tete_Poly1 = NULL, *M = NULL, *N = NULL;
     unsigned int temps_limite = 0;
     int nb_coef = 0, puis = 0;
-    float cof = 0; 
+    float cof = 0;
     char phrase[100] = "";
-
     SDL_Texture *texture_p3 = NULL;
     SDL_Surface *page3 = NULL;
     SDL_Surface *texte = NULL;
     TTF_Font *police2 = NULL, *police3 = NULL;
     SDL_Rect position_textures, position_texte;
     SDL_Event event;
-    SDL_bool sortir_tache = SDL_FALSE, rendu_modifie = SDL_TRUE;
+    SDL_bool sortir_tache = SDL_FALSE;
+    Rectangle boutton_retour = {3, 100, 260, 632, 687, SDL_FALSE};
 
-    page3 = IMG_Load("images/03.jpg");
+    page3 = IMG_Load("assets/images/03.jpg");
     if (page3 == NULL)
         SDL_ExitWithError("Impossible de charger l'image");
 
-    police2 = TTF_OpenFont("polices/times.ttf", 40);
+    police2 = TTF_OpenFont("assets/polices/times.ttf", 40);
     if (police2 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police2, TTF_STYLE_BOLD | TTF_STYLE_ITALIC | TTF_STYLE_UNDERLINE);
 
-    police3 = TTF_OpenFont("polices/times.ttf", 30);
+    police3 = TTF_OpenFont("assets/polices/times.ttf", 30);
     if (police3 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -1939,7 +1942,7 @@ void ajout_new_polynome_2D(SDL_Renderer *rendu, LLC_Poly **Tete_Ensemble)
 
         for (int i = 2; i <= nb_coef; i++)
         {
-            page3 = IMG_Load("images/03.jpg");
+            page3 = IMG_Load("assets/images/03.jpg");
             if (page3 == NULL)
                 SDL_ExitWithError("Impossible de charger l'image");
 
@@ -1984,7 +1987,7 @@ void ajout_new_polynome_2D(SDL_Renderer *rendu, LLC_Poly **Tete_Ensemble)
             N = M;
         }
     }
-    
+
     ajout_poly_ensemble(Tete_Ensemble, Tete_Poly1);
     position_texte.x = 930;
     position_texte.y = 670;
@@ -2002,31 +2005,39 @@ void ajout_new_polynome_2D(SDL_Renderer *rendu, LLC_Poly **Tete_Ensemble)
         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
     SDL_RenderPresent(rendu);
 
-        while (!sortir_tache)
+    while (!sortir_tache)
     {
         temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-        if (rendu_modifie == SDL_TRUE)
+        // Dessiner une bordure rouge si le boutton de retour est survolé
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_bool stateChanged = SDL_FALSE;
+        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+        if (currentlyInside != boutton_retour.mouseInside)
+        {
+            boutton_retour.mouseInside = currentlyInside;
+            stateChanged = SDL_TRUE;
+        }
+        if (stateChanged)
         {
             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                 SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-            rendu_modifie = SDL_FALSE;
+
+            if (boutton_retour.mouseInside)
+            {
+                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+            }
             SDL_RenderPresent(rendu);
         }
 
-        if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
-        {
-            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-            rendu_modifie = SDL_TRUE;
-            SDL_RenderPresent(rendu);
-        }
         while (SDL_PollEvent(&event))
         {
             switch (event.type)
             {
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT)
-                    if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                    if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                         sortir_tache = SDL_TRUE;
                 break;
 
@@ -2057,30 +2068,30 @@ void afficher_liste_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
     LLC_Poly *Poly = Tete_Ensemble;
     Monome *Tete_Poly1 = NULL;
     char chaine_char[30] = "";
-
     SDL_Texture *texture_p3 = NULL;
     SDL_Surface *page3 = NULL, *texte = NULL;
     TTF_Font *police2 = NULL, *police3 = NULL, *police4 = NULL;
     SDL_Rect position_textures, position_texte;
     SDL_Event event;
-    SDL_bool sortir_tache = SDL_FALSE, rendu_modifie = SDL_TRUE;
+    SDL_bool sortir_tache = SDL_FALSE;
     unsigned int temps_limite = 0, cpt = 0;
+    Rectangle boutton_retour = {3, 100, 260, 632, 687, SDL_FALSE};
 
-    page3 = IMG_Load("images/03.jpg");
+    page3 = IMG_Load("assets/images/03.jpg");
     if (page3 == NULL)
         SDL_ExitWithError("Impossible de charger l'image");
 
-    police2 = TTF_OpenFont("polices/times.ttf", 40);
+    police2 = TTF_OpenFont("assets/polices/times.ttf", 40);
     if (police2 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police2, TTF_STYLE_BOLD | TTF_STYLE_ITALIC | TTF_STYLE_UNDERLINE);
 
-    police3 = TTF_OpenFont("polices/times.ttf", 25);
+    police3 = TTF_OpenFont("assets/polices/times.ttf", 25);
     if (police3 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
 
-    police4 = TTF_OpenFont("polices/times.ttf", 15);
+    police4 = TTF_OpenFont("assets/polices/times.ttf", 15);
     if (police4 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -2105,13 +2116,13 @@ void afficher_liste_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         cpt++;
         position_texte.x = 280;
         position_texte.y += 50;
-        sprintf(chaine_char,"P%d = ", cpt);
+        sprintf(chaine_char, "P%d = ", cpt);
         texte = TTF_RenderText_Blended(police3, chaine_char, NOIR);
         SDL_BlitSurface(texte, NULL, page3, &position_texte);
         position_texte.x += texte->w;
         if (Tete_Poly1 == NULL)
         {
-            texte = TTF_RenderText_Blended(police3,"Ce polynome est vide (nul).", NOIR);
+            texte = TTF_RenderText_Blended(police3, "Ce polynome est vide (nul).", NOIR);
             SDL_BlitSurface(texte, NULL, page3, &position_texte);
         }
         else
@@ -2126,7 +2137,7 @@ void afficher_liste_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                     position_texte.y += 30;
                 }
                 SDL_BlitSurface(texte, NULL, page3, &position_texte);
-                position_texte.x += texte->w;                
+                position_texte.x += texte->w;
                 sprintf(chaine_char, "%d", Tete_Poly1->puiss);
                 texte = TTF_RenderText_Blended(police4, chaine_char, NOIR);
                 SDL_BlitSurface(texte, NULL, page3, &position_texte);
@@ -2177,27 +2188,35 @@ void afficher_liste_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
     {
         temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-        if (rendu_modifie)
+        // Dessiner une bordure rouge si le boutton de retour est survolé
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_bool stateChanged = SDL_FALSE;
+        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+        if (currentlyInside != boutton_retour.mouseInside)
+        {
+            boutton_retour.mouseInside = currentlyInside;
+            stateChanged = SDL_TRUE;
+        }
+        if (stateChanged)
         {
             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                 SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-            rendu_modifie = SDL_FALSE;
+
+            if (boutton_retour.mouseInside)
+            {
+                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+            }
             SDL_RenderPresent(rendu);
         }
 
-        if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
-        {
-            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-            rendu_modifie = SDL_TRUE;
-            SDL_RenderPresent(rendu);
-        }
         while (SDL_PollEvent(&event))
         {
             switch (event.type)
             {
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT)
-                    if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                    if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                         sortir_tache = SDL_TRUE;
                 break;
 
@@ -2229,31 +2248,31 @@ void supprimer_polynome_2D(SDL_Renderer *rendu, LLC_Poly **Tete_Ensemble)
     LLC_Poly *Poly = *Tete_Ensemble;
     Monome *Tete_Poly1 = NULL;
     char chaine_char[30] = "";
-    int coord_y[20] = {0};
-
     SDL_Texture *texture_p3 = NULL;
     SDL_Surface *page3 = NULL, *texte = NULL;
     TTF_Font *police2 = NULL, *police3 = NULL, *police4 = NULL;
     SDL_Rect position_textures, position_texte, cases;
     SDL_Event event;
-    SDL_bool sortir_tache = SDL_FALSE, rendu_modifie = SDL_TRUE;
+    SDL_bool sortir_tache = SDL_FALSE;
     unsigned int temps_limite = 0, cpt = 0;
+    Rectangle boutton_retour = {3, 100, 260, 632, 687, SDL_FALSE};
+    Rectangle *bouttons = (Rectangle *)malloc(20 * sizeof(Rectangle));
 
-    page3 = IMG_Load("images/03.jpg");
+    page3 = IMG_Load("assets/images/03.jpg");
     if (page3 == NULL)
         SDL_ExitWithError("Impossible de charger l'image");
 
-    police2 = TTF_OpenFont("polices/times.ttf", 40);
+    police2 = TTF_OpenFont("assets/polices/times.ttf", 40);
     if (police2 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police2, TTF_STYLE_BOLD | TTF_STYLE_ITALIC | TTF_STYLE_UNDERLINE);
 
-    police3 = TTF_OpenFont("polices/times.ttf", 25);
+    police3 = TTF_OpenFont("assets/polices/times.ttf", 25);
     if (police3 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
 
-    police4 = TTF_OpenFont("polices/times.ttf", 15);
+    police4 = TTF_OpenFont("assets/polices/times.ttf", 15);
     if (police4 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -2277,7 +2296,12 @@ void supprimer_polynome_2D(SDL_Renderer *rendu, LLC_Poly **Tete_Ensemble)
         Tete_Poly1 = Poly->adr1;
         position_texte.x = 280;
         position_texte.y += 50;
-        coord_y[cpt] = position_texte.y;
+        bouttons[cpt].page = 3;
+        bouttons[cpt].x1 = 230;
+        bouttons[cpt].x2 = 260;
+        bouttons[cpt].y1 = 150 + 50 * cpt;
+        bouttons[cpt].y2 = 180 + 50 * cpt;
+        bouttons[cpt].mouseInside = SDL_FALSE;
         cpt++;
         sprintf(chaine_char, "P%d = ", cpt);
         texte = TTF_RenderText_Blended(police3, chaine_char, NOIR);
@@ -2347,79 +2371,125 @@ void supprimer_polynome_2D(SDL_Renderer *rendu, LLC_Poly **Tete_Ensemble)
     if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
 
+    if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    cases.h = 30;
+    cases.w = 30;
+    for (int i = 0; i < cpt; i++)
+    {
+        cases.x = bouttons[i].x1;
+        cases.y = bouttons[i].y1;
+        if (SDL_RenderFillRect(rendu, &cases) != 0)
+            SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+    }
     if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
         SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    SDL_RenderPresent(rendu);
 
     while (sortir_tache == SDL_FALSE)
     {
         temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-        if (rendu_modifie)
+        // Dessiner une bordure rouge si le boutton de retour est survolé
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_bool stateChanged = SDL_FALSE;
+        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+        if (currentlyInside != boutton_retour.mouseInside)
         {
+            boutton_retour.mouseInside = currentlyInside;
+            stateChanged = SDL_TRUE;
+        }
+        if (stateChanged)
+        {
+            // Copier la texture du départ (page 3)
             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                 SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-
+            // Dessiner les cases à cocher
             if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-            cases.x = 230;
             cases.h = 30;
             cases.w = 30;
             for (int i = 0; i < cpt; i++)
             {
-                cases.y = coord_y[i];
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
                 if (SDL_RenderFillRect(rendu, &cases) != 0)
                     SDL_ExitWithError("Impossible de dessiner les cases à cocher");
             }
-            rendu_modifie = SDL_FALSE;
-            SDL_RenderPresent(rendu);
             if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-        }        
 
-        if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
-        {
-            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-            rendu_modifie = SDL_TRUE;
+            if (boutton_retour.mouseInside)
+            {
+                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+            }
             SDL_RenderPresent(rendu);
         }
-        for (int i = 0; i < cpt; i++)
+
+        // Dessiner une bordure et une croix si les caches à cocher sont survolées
+        stateChanged = SDL_FALSE;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        for (int i = 0; i < cpt; ++i)
         {
-            if ((event.motion.x < 260) && (event.motion.x > 230) && (event.motion.y < coord_y[i]+30) && (event.motion.y > coord_y[i]))
+            currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons[i]);
+            if (currentlyInside != bouttons[i].mouseInside)
             {
-                dessiner_rectangle(rendu, 230, coord_y[i], 30, 30);
-                SDL_RenderDrawLine(rendu, 230, coord_y[i], 260, coord_y[i] + 30);
-                SDL_RenderDrawLine(rendu, 260, coord_y[i], 230, coord_y[i] + 30);
-                rendu_modifie = SDL_TRUE;
-                SDL_RenderPresent(rendu);
-                break;
+                bouttons[i].mouseInside = currentlyInside;
+                stateChanged = SDL_TRUE;
             }
         }
-        
+        if (stateChanged)
+        {
+            // Copier la texture du départ (page 3)
+            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+            // Dessiner les cases à cocher
+            if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+            cases.h = 30;
+            cases.w = 30;
+            for (int i = 0; i < cpt; i++)
+            {
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
+                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                    SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+            }
+            if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+            for (int i = 0; i < cpt; ++i)
+            {
+                if (bouttons[i].mouseInside)
+                {
+                    dessiner_rectangle(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2 - bouttons[i].x1, bouttons[i].y2 - bouttons[i].y1);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2, bouttons[i].y2);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x2, bouttons[i].y1, bouttons[i].x1, bouttons[i].y2);
+                }
+            }
+            SDL_RenderPresent(rendu);
+        }
+
         while (SDL_PollEvent(&event))
         {
             switch (event.type)
             {
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT)
-                {    
-                    if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                {
+                    if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                         sortir_tache = SDL_TRUE;
                     else
                     {
                         for (int i = 0; i < cpt; i++)
                         {
-                            if ((event.button.x < 260) && (event.button.x > 230) && (event.button.y < coord_y[i] + 30) && (event.button.y > coord_y[i]))
+                            if ((event.button.x < bouttons[i].x2) && (event.button.x > bouttons[i].x1) && (event.button.y < bouttons[i].y2) && (event.button.y > bouttons[i].y1))
                             {
                                 if (supp_poly_ensemble(Tete_Ensemble, adr_maillon_ens(*Tete_Ensemble, i + 1)) == 0)
                                 {
-                                    if (SDL_RenderDrawLine(rendu, 300, coord_y[i] + 15, 1200, coord_y[i] + 15) != 0)
+                                    if (SDL_RenderDrawLine(rendu, 300, bouttons[i].y1 + 15, 1200, bouttons[i].y1 + 15) != 0)
                                         SDL_ExitWithError("Impossible de dessiner la ligne rouge");
-                                    while ((coord_y[i] + 50 < coord_y[i + 1]) && (coord_y[i + 1] != 0))
-                                    {
-                                        coord_y[i] += 30;
-                                        if (SDL_RenderDrawLine(rendu, 300, coord_y[i] + 15, 1200, coord_y[i] + 15) != 0)
-                                            SDL_ExitWithError("Impossible de dessiner les ligne rouge");
-                                    }
                                     SDL_RenderPresent(rendu);
                                     SDL_Delay(500);
                                     supprimer_polynome_2D(rendu, Tete_Ensemble);
@@ -2443,6 +2513,7 @@ void supprimer_polynome_2D(SDL_Renderer *rendu, LLC_Poly **Tete_Ensemble)
         limiter_FPS(temps_limite); // -----> Limiter la vitesse du programme
     }
 
+    free(bouttons);
     TTF_CloseFont(police2);
     TTF_CloseFont(police3);
     TTF_CloseFont(police4);
@@ -2460,31 +2531,31 @@ void copier_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
     LLC_Poly *Poly = Tete_Ensemble;
     Monome *Tete_Poly1 = NULL, *Tete_Poly2 = NULL;
     char chaine_char[30] = "";
-    int coord_y[20] = {0};
     unsigned int temps_limite = 0, cpt = 0;
-
     SDL_Texture *texture_p3 = NULL;
     SDL_Surface *page3 = NULL, *texte = NULL;
     TTF_Font *police2 = NULL, *police3 = NULL, *police4 = NULL;
     SDL_Rect position_textures, position_texte, cases;
     SDL_Event event;
-    SDL_bool sortir_tache = SDL_FALSE, rendu_modifie = SDL_TRUE;
+    SDL_bool sortir_tache = SDL_FALSE;
+    Rectangle boutton_retour = {3, 100, 260, 632, 687, SDL_FALSE};
+    Rectangle *bouttons = (Rectangle *)malloc(20 * sizeof(Rectangle));
 
-    page3 = IMG_Load("images/03.jpg");
+    page3 = IMG_Load("assets/images/03.jpg");
     if (page3 == NULL)
         SDL_ExitWithError("Impossible de charger l'image");
 
-    police2 = TTF_OpenFont("polices/times.ttf", 40);
+    police2 = TTF_OpenFont("assets/polices/times.ttf", 40);
     if (police2 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police2, TTF_STYLE_BOLD | TTF_STYLE_ITALIC | TTF_STYLE_UNDERLINE);
 
-    police3 = TTF_OpenFont("polices/times.ttf", 25);
+    police3 = TTF_OpenFont("assets/polices/times.ttf", 25);
     if (police3 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
 
-    police4 = TTF_OpenFont("polices/times.ttf", 15);
+    police4 = TTF_OpenFont("assets/polices/times.ttf", 15);
     if (police4 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -2508,7 +2579,12 @@ void copier_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         Tete_Poly1 = Poly->adr1;
         position_texte.x = 280;
         position_texte.y += 50;
-        coord_y[cpt] = position_texte.y;
+        bouttons[cpt].page = 3;
+        bouttons[cpt].x1 = 230;
+        bouttons[cpt].x2 = 260;
+        bouttons[cpt].y1 = 150 + 50 * cpt;
+        bouttons[cpt].y2 = 180 + 50 * cpt;
+        bouttons[cpt].mouseInside = SDL_FALSE;
         cpt++;
         sprintf(chaine_char, "P%d = ", cpt);
         texte = TTF_RenderText_Blended(police3, chaine_char, NOIR);
@@ -2572,52 +2648,100 @@ void copier_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
     SDL_RenderPresent(rendu);
 
+    if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    cases.h = 30;
+    cases.w = 30;
+    for (int i = 0; i < cpt; i++)
+    {
+        cases.x = bouttons[i].x1;
+        cases.y = bouttons[i].y1;
+        if (SDL_RenderFillRect(rendu, &cases) != 0)
+            SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+    }
     if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
         SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    SDL_RenderPresent(rendu);
 
     while (!sortir_tache)
     {
         temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-        if (rendu_modifie)
+        // Dessiner une bordure rouge si le boutton de retour est survolé
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_bool stateChanged = SDL_FALSE;
+        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+        if (currentlyInside != boutton_retour.mouseInside)
+        {
+            boutton_retour.mouseInside = currentlyInside;
+            stateChanged = SDL_TRUE;
+        }
+        if (stateChanged)
         {
             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                 SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-
             if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-            cases.x = 230;
             cases.h = 30;
             cases.w = 30;
             for (int i = 0; i < cpt; i++)
             {
-                cases.y = coord_y[i];
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
                 if (SDL_RenderFillRect(rendu, &cases) != 0)
                     SDL_ExitWithError("Impossible de dessiner les cases à cocher");
             }
-            rendu_modifie = SDL_FALSE;
-            SDL_RenderPresent(rendu);
             if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-        }
 
-        if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
-        {
-            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-            rendu_modifie = SDL_TRUE;
+            if (boutton_retour.mouseInside)
+            {
+                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+            }
             SDL_RenderPresent(rendu);
         }
-        for (int i = 0; i < cpt; i++)
+
+        // Dessiner une bordure et une croix si les caches à cocher sont survolées
+        stateChanged = SDL_FALSE;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        for (int i = 0; i < cpt; ++i)
         {
-            if ((event.motion.x < 260) && (event.motion.x > 230) && (event.motion.y < coord_y[i] + 30) && (event.motion.y > coord_y[i]))
+            currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons[i]);
+            if (currentlyInside != bouttons[i].mouseInside)
             {
-                dessiner_rectangle(rendu, 230, coord_y[i], 30, 30);
-                SDL_RenderDrawLine(rendu, 230, coord_y[i], 260, coord_y[i] + 30);
-                SDL_RenderDrawLine(rendu, 260, coord_y[i], 230, coord_y[i] + 30);
-                rendu_modifie = SDL_TRUE;
-                SDL_RenderPresent(rendu);
-                break;
+                bouttons[i].mouseInside = currentlyInside;
+                stateChanged = SDL_TRUE;
             }
+        }
+        if (stateChanged)
+        {
+            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+            if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+            cases.h = 30;
+            cases.w = 30;
+            for (int i = 0; i < cpt; i++)
+            {
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
+                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                    SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+            }
+            if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+            for (int i = 0; i < cpt; ++i)
+            {
+                if (bouttons[i].mouseInside)
+                {
+                    dessiner_rectangle(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2 - bouttons[i].x1, bouttons[i].y2 - bouttons[i].y1);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2, bouttons[i].y2);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x2, bouttons[i].y1, bouttons[i].x1, bouttons[i].y2);
+                }
+            }
+            SDL_RenderPresent(rendu);
         }
 
         while (SDL_PollEvent(&event))
@@ -2627,18 +2751,18 @@ void copier_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT)
                 {
-                    if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                    if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                         sortir_tache = SDL_TRUE;
                     else
                     {
                         for (int i = 0; i < cpt; i++)
                         {
-                            if ((event.button.x < 260) && (event.button.x > 230) && (event.button.y < coord_y[i] + 30) && (event.button.y > coord_y[i]))
+                            if ((event.button.x < bouttons[i].x2) && (event.button.x > bouttons[i].x1) && (event.button.y < bouttons[i].y2) && (event.button.y > bouttons[i].y1))
                             {
                                 //-----------------------------------------------Copie du polynome------------------------------------------------------
                                 Tete_Poly1 = copie_poly(adr_maillon_ens(Tete_Ensemble, i + 1)->adr1);
                                 Tete_Poly2 = Tete_Poly1;
-                                page3 = IMG_Load("images/03.jpg");
+                                page3 = IMG_Load("assets/images/03.jpg");
                                 if (page3 == NULL)
                                     SDL_ExitWithError("Impossible de charger l'image");
                                 position_texte.x = 80;
@@ -2719,63 +2843,105 @@ void copier_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                     SDL_ExitWithError("Impossible de créer la texture");
                                 if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                     SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+
+                                Rectangle bouttons_oui_non[] = {
+                                    {3, 600, 630, position_texte.y, position_texte.y + 30, SDL_FALSE},
+                                    {3, 800, 830, position_texte.y, position_texte.y + 30, SDL_FALSE}};
+                                if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+                                    SDL_ExitWithError("Impossible de changer la couleuur du rendu");
+                                cases.x = bouttons_oui_non[0].x1;
+                                cases.y = bouttons_oui_non[0].y1;
+                                cases.h = 30;
+                                cases.w = 30;
+                                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                    SDL_ExitWithError("Impossible de dessiner les cases");
+                                cases.x = bouttons_oui_non[1].x1;
+                                cases.y = bouttons_oui_non[1].y1;
+                                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                    SDL_ExitWithError("Impossible de dessiner les cases");
+                                if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                    SDL_ExitWithError("Impossible de changer la couleur au Rendu");
                                 SDL_RenderPresent(rendu);
 
-
                                 SDL_bool oui_non = SDL_TRUE;
-                                rendu_modifie = SDL_TRUE;
                                 while (oui_non)
                                 {
                                     temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-                                    if (rendu_modifie)
+                                    // Dessiner une bordure rouge si le boutton de retour est survolé
+                                    int mouseX, mouseY;
+                                    SDL_GetMouseState(&mouseX, &mouseY);
+                                    SDL_bool stateChanged = SDL_FALSE;
+                                    SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+                                    if (currentlyInside != boutton_retour.mouseInside)
+                                    {
+                                        boutton_retour.mouseInside = currentlyInside;
+                                        stateChanged = SDL_TRUE;
+                                    }
+                                    if (stateChanged)
                                     {
                                         if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                             SDL_ExitWithError("Impossible de copier la texture dans le rendu");
                                         if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
-                                            SDL_ExitWithError("Impossible de changer la couleuur du rendu");
-                                        cases.x = 600;
-                                        cases.y = position_texte.y;
+                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
                                         cases.h = 30;
                                         cases.w = 30;
-                                        if (SDL_RenderFillRect(rendu, &cases) != 0)
-                                            SDL_ExitWithError("Impossible de dessiner les cases");
-                                        cases.x = 800;
-                                        cases.y = position_texte.y;
-                                        cases.h = 30;
-                                        cases.w = 30;
-                                        if (SDL_RenderFillRect(rendu, &cases) != 0)
-                                            SDL_ExitWithError("Impossible de dessiner les cases");
+                                        for (int i = 0; i < 2; i++)
+                                        {
+                                            cases.x = bouttons_oui_non[i].x1;
+                                            cases.y = bouttons_oui_non[i].y1;
+                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+                                        }
                                         if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                                             SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-                                        rendu_modifie = SDL_FALSE;
+                                        if (boutton_retour.mouseInside)
+                                        {
+                                            dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+                                        }
                                         SDL_RenderPresent(rendu);
                                     }
 
-                                    if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
+                                    // Dessiner une bordure rouge si un des bouttons (oui et non) est survolé
+                                    stateChanged = SDL_FALSE;
+                                    SDL_GetMouseState(&mouseX, &mouseY);
+                                    for (int i = 0; i < 2; i++)
                                     {
-                                        dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-                                        rendu_modifie = SDL_TRUE;
-                                        SDL_RenderPresent(rendu);
+                                        currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons_oui_non[i]);
+                                        if (currentlyInside != bouttons_oui_non[i].mouseInside)
+                                        {
+                                            bouttons_oui_non[i].mouseInside = currentlyInside;
+                                            stateChanged = SDL_TRUE;
+                                        }
                                     }
-                                    else
+                                    if (stateChanged)
                                     {
-                                        if ((event.motion.x < 630) && (event.motion.x > 600) && (event.motion.y < position_texte.y+30) && (event.motion.y > position_texte.y))
+                                        if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                                            SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+                                        if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                                        cases.h = 30;
+                                        cases.w = 30;
+                                        for (int i = 0; i < 2; i++)
                                         {
-                                            dessiner_rectangle(rendu, 600, position_texte.y, 30, 30);
-                                            SDL_RenderDrawLine(rendu, 600, position_texte.y, 630, position_texte.y + 30);
-                                            SDL_RenderDrawLine(rendu, 630, position_texte.y, 600, position_texte.y + 30);
-                                            rendu_modifie = SDL_TRUE;
-                                            SDL_RenderPresent(rendu);
+                                            cases.x = bouttons_oui_non[i].x1;
+                                            cases.y = bouttons_oui_non[i].y1;
+                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                SDL_ExitWithError("Impossible de dessiner les cases à cocher");
                                         }
-                                        if ((event.motion.x < 830) && (event.motion.x > 800) && (event.motion.y < position_texte.y+30) && (event.motion.y > position_texte.y))
+                                        if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+                                        for (int i = 0; i < 2; ++i)
                                         {
-                                            dessiner_rectangle(rendu, 800, position_texte.y, 30, 30);
-                                            SDL_RenderDrawLine(rendu, 800, position_texte.y, 830, position_texte.y + 30);
-                                            SDL_RenderDrawLine(rendu, 830, position_texte.y, 800, position_texte.y + 30);
-                                            rendu_modifie = SDL_TRUE;
-                                            SDL_RenderPresent(rendu);
+                                            if (bouttons_oui_non[i].mouseInside)
+                                            {
+                                                dessiner_rectangle(rendu, bouttons_oui_non[i].x1, bouttons_oui_non[i].y1, 30, 30);
+                                                SDL_RenderDrawLine(rendu, bouttons_oui_non[i].x2, bouttons_oui_non[i].y1, bouttons_oui_non[i].x1, bouttons_oui_non[i].y2);
+                                                SDL_RenderDrawLine(rendu, bouttons_oui_non[i].x1, bouttons_oui_non[i].y1, bouttons_oui_non[i].x2, bouttons_oui_non[i].y2);
+                                            }
                                         }
+                                        SDL_RenderPresent(rendu);
                                     }
 
                                     while (SDL_PollEvent(&event))
@@ -2785,16 +2951,16 @@ void copier_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                         case SDL_MOUSEBUTTONDOWN:
                                             if (event.button.button == SDL_BUTTON_LEFT)
                                             {
-                                                if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                                                if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                                                     oui_non = SDL_FALSE;
                                                 else
                                                 {
-                                                    if ((event.button.x < 630) && (event.button.x > 600) && (event.button.y < position_texte.y + 30) && (event.button.y > position_texte.y))
+                                                    if ((event.button.x < bouttons_oui_non[0].x2) && (event.button.x > bouttons_oui_non[0].x1) && (event.button.y < bouttons_oui_non[0].y2) && (event.button.y > bouttons_oui_non[0].y1))
                                                     {
                                                         ajout_poly_ensemble(&Tete_Ensemble, Tete_Poly2);
                                                         oui_non = SDL_FALSE;
                                                     }
-                                                    if ((event.button.x < 830) && (event.button.x > 800) && (event.button.y < position_texte.y + 30) && (event.button.y > position_texte.y))
+                                                    if ((event.button.x < bouttons_oui_non[1].x2) && (event.button.x > bouttons_oui_non[1].x1) && (event.button.y < bouttons_oui_non[1].y2) && (event.button.y > bouttons_oui_non[1].y1))
                                                     {
                                                         oui_non = SDL_FALSE;
                                                     }
@@ -2832,6 +2998,7 @@ void copier_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         limiter_FPS(temps_limite); // -----> Limiter la vitesse du programme
     }
 
+    free(bouttons);
     TTF_CloseFont(police2);
     TTF_CloseFont(police3);
     TTF_CloseFont(police4);
@@ -2849,31 +3016,31 @@ void simplifier_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
     LLC_Poly *Poly = Tete_Ensemble;
     Monome *Tete_Poly1 = NULL, *Tete_Poly2 = NULL;
     char chaine_char[30] = "";
-    int coord_y[20] = {0};
-
     SDL_Texture *texture_p3 = NULL;
     SDL_Surface *page3 = NULL, *texte = NULL;
     TTF_Font *police2 = NULL, *police3 = NULL, *police4 = NULL;
     SDL_Rect position_textures, position_texte, cases;
     SDL_Event event;
-    SDL_bool sortir_tache = SDL_FALSE, rendu_modifie = SDL_TRUE;
+    SDL_bool sortir_tache = SDL_FALSE;
     unsigned int temps_limite = 0, cpt = 0;
+    Rectangle boutton_retour = {3, 100, 260, 632, 687, SDL_FALSE};
+    Rectangle *bouttons = (Rectangle *)malloc(20 * sizeof(Rectangle));
 
-    page3 = IMG_Load("images/03.jpg");
+    page3 = IMG_Load("assets/images/03.jpg");
     if (page3 == NULL)
         SDL_ExitWithError("Impossible de charger l'image");
 
-    police2 = TTF_OpenFont("polices/times.ttf", 40);
+    police2 = TTF_OpenFont("assets/polices/times.ttf", 40);
     if (police2 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police2, TTF_STYLE_BOLD | TTF_STYLE_ITALIC | TTF_STYLE_UNDERLINE);
 
-    police3 = TTF_OpenFont("polices/times.ttf", 25);
+    police3 = TTF_OpenFont("assets/polices/times.ttf", 25);
     if (police3 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
 
-    police4 = TTF_OpenFont("polices/times.ttf", 15);
+    police4 = TTF_OpenFont("assets/polices/times.ttf", 15);
     if (police4 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -2897,7 +3064,12 @@ void simplifier_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         Tete_Poly1 = Poly->adr1;
         position_texte.x = 280;
         position_texte.y += 50;
-        coord_y[cpt] = position_texte.y;
+        bouttons[cpt].page = 3;
+        bouttons[cpt].x1 = 230;
+        bouttons[cpt].x2 = 260;
+        bouttons[cpt].y1 = 150 + 50 * cpt;
+        bouttons[cpt].y2 = 180 + 50 * cpt;
+        bouttons[cpt].mouseInside = SDL_FALSE;
         cpt++;
         sprintf(chaine_char, "P%d = ", cpt);
         texte = TTF_RenderText_Blended(police3, chaine_char, NOIR);
@@ -2961,52 +3133,100 @@ void simplifier_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
     SDL_RenderPresent(rendu);
 
+    if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    cases.h = 30;
+    cases.w = 30;
+    for (int i = 0; i < cpt; i++)
+    {
+        cases.x = bouttons[i].x1;
+        cases.y = bouttons[i].y1;
+        if (SDL_RenderFillRect(rendu, &cases) != 0)
+            SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+    }
     if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
         SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    SDL_RenderPresent(rendu);
 
     while (!sortir_tache)
     {
         temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-        if (rendu_modifie)
+        // Dessiner une bordure rouge si le boutton de retour est survolé
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_bool stateChanged = SDL_FALSE;
+        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+        if (currentlyInside != boutton_retour.mouseInside)
+        {
+            boutton_retour.mouseInside = currentlyInside;
+            stateChanged = SDL_TRUE;
+        }
+        if (stateChanged)
         {
             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                 SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-
             if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-            cases.x = 230;
             cases.h = 30;
             cases.w = 30;
             for (int i = 0; i < cpt; i++)
             {
-                cases.y = coord_y[i];
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
                 if (SDL_RenderFillRect(rendu, &cases) != 0)
                     SDL_ExitWithError("Impossible de dessiner les cases à cocher");
             }
-            rendu_modifie = SDL_FALSE;
-            SDL_RenderPresent(rendu);
             if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-        }
 
-        if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
-        {
-            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-            rendu_modifie = SDL_TRUE;
+            if (boutton_retour.mouseInside)
+            {
+                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+            }
             SDL_RenderPresent(rendu);
         }
-        for (int i = 0; i < cpt; i++)
+
+        // Dessiner une bordure et une croix si les cases à cocher sont survolées
+        stateChanged = SDL_FALSE;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        for (int i = 0; i < cpt; ++i)
         {
-            if ((event.motion.x < 260) && (event.motion.x > 230) && (event.motion.y < coord_y[i] + 30) && (event.motion.y > coord_y[i]))
+            currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons[i]);
+            if (currentlyInside != bouttons[i].mouseInside)
             {
-                dessiner_rectangle(rendu, 230, coord_y[i], 30, 30);
-                SDL_RenderDrawLine(rendu, 230, coord_y[i], 260, coord_y[i] + 30);
-                SDL_RenderDrawLine(rendu, 260, coord_y[i], 230, coord_y[i] + 30);
-                rendu_modifie = SDL_TRUE;
-                SDL_RenderPresent(rendu);
-                break;
+                bouttons[i].mouseInside = currentlyInside;
+                stateChanged = SDL_TRUE;
             }
+        }
+        if (stateChanged)
+        {
+            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+            if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+            cases.h = 30;
+            cases.w = 30;
+            for (int i = 0; i < cpt; i++)
+            {
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
+                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                    SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+            }
+            if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+            for (int i = 0; i < cpt; ++i)
+            {
+                if (bouttons[i].mouseInside)
+                {
+                    dessiner_rectangle(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2 - bouttons[i].x1, bouttons[i].y2 - bouttons[i].y1);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2, bouttons[i].y2);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x2, bouttons[i].y1, bouttons[i].x1, bouttons[i].y2);
+                }
+            }
+            SDL_RenderPresent(rendu);
         }
 
         while (SDL_PollEvent(&event))
@@ -3016,19 +3236,19 @@ void simplifier_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT)
                 {
-                    if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                    if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                         sortir_tache = SDL_TRUE;
                     else
                     {
                         for (int i = 0; i < cpt; i++)
                         {
-                            if ((event.button.x < 260) && (event.button.x > 230) && (event.button.y < coord_y[i] + 30) && (event.button.y > coord_y[i]))
+                            if ((event.button.x < bouttons[i].x2) && (event.button.x > bouttons[i].x1) && (event.button.y < bouttons[i].y2) && (event.button.y > bouttons[i].y1))
                             {
                                 //-----------------------------------------------Simplification du polynome------------------------------------------------------
                                 Tete_Poly1 = copie_poly(adr_maillon_ens(Tete_Ensemble, i + 1)->adr1);
                                 simpl_poly(&Tete_Poly1);
                                 Tete_Poly2 = Tete_Poly1;
-                                page3 = IMG_Load("images/03.jpg");
+                                page3 = IMG_Load("assets/images/03.jpg");
                                 if (page3 == NULL)
                                     SDL_ExitWithError("Impossible de charger l'image");
                                 position_texte.x = 80;
@@ -3109,62 +3329,105 @@ void simplifier_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                     SDL_ExitWithError("Impossible de créer la texture");
                                 if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                     SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+
+                                Rectangle bouttons_oui_non[] = {
+                                    {3, 600, 630, position_texte.y, position_texte.y + 30, SDL_FALSE},
+                                    {3, 800, 830, position_texte.y, position_texte.y + 30, SDL_FALSE}};
+                                SDL_bool oui_non = SDL_TRUE;
+                                if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+                                    SDL_ExitWithError("Impossible de changer la couleuur du rendu");
+                                cases.x = bouttons_oui_non[0].x1;
+                                cases.y = bouttons_oui_non[0].y1;
+                                cases.h = 30;
+                                cases.w = 30;
+                                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                    SDL_ExitWithError("Impossible de dessiner les cases");
+                                cases.x = bouttons_oui_non[1].x1;
+                                cases.y = bouttons_oui_non[1].y1;
+                                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                    SDL_ExitWithError("Impossible de dessiner les cases");
+                                if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                    SDL_ExitWithError("Impossible de changer la couleur au Rendu");
                                 SDL_RenderPresent(rendu);
 
-                                SDL_bool oui_non = SDL_TRUE;
-                                rendu_modifie = SDL_TRUE;
                                 while (oui_non)
                                 {
                                     temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-                                    if (rendu_modifie)
+                                    // Dessiner une bordure rouge si le boutton de retour est survolé
+                                    int mouseX, mouseY;
+                                    SDL_GetMouseState(&mouseX, &mouseY);
+                                    SDL_bool stateChanged = SDL_FALSE;
+                                    SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+                                    if (currentlyInside != boutton_retour.mouseInside)
+                                    {
+                                        boutton_retour.mouseInside = currentlyInside;
+                                        stateChanged = SDL_TRUE;
+                                    }
+                                    if (stateChanged)
                                     {
                                         if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                             SDL_ExitWithError("Impossible de copier la texture dans le rendu");
                                         if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
-                                            SDL_ExitWithError("Impossible de changer la couleuur du rendu");
-                                        cases.x = 600;
-                                        cases.y = position_texte.y;
+                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
                                         cases.h = 30;
                                         cases.w = 30;
-                                        if (SDL_RenderFillRect(rendu, &cases) != 0)
-                                            SDL_ExitWithError("Impossible de dessiner les cases");
-                                        cases.x = 800;
-                                        cases.y = position_texte.y;
-                                        cases.h = 30;
-                                        cases.w = 30;
-                                        if (SDL_RenderFillRect(rendu, &cases) != 0)
-                                            SDL_ExitWithError("Impossible de dessiner les cases");
+                                        for (int i = 0; i < 2; i++)
+                                        {
+                                            cases.x = bouttons_oui_non[i].x1;
+                                            cases.y = bouttons_oui_non[i].y1;
+                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+                                        }
                                         if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                                             SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-                                        rendu_modifie = SDL_FALSE;
+                                        if (boutton_retour.mouseInside)
+                                        {
+                                            dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+                                        }
                                         SDL_RenderPresent(rendu);
                                     }
 
-                                    if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
+                                    // Dessiner une bordure rouge si un des bouttons (oui et non) est survolé
+                                    stateChanged = SDL_FALSE;
+                                    SDL_GetMouseState(&mouseX, &mouseY);
+                                    for (int i = 0; i < 2; i++)
                                     {
-                                        dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-                                        rendu_modifie = SDL_TRUE;
-                                        SDL_RenderPresent(rendu);
+                                        currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons_oui_non[i]);
+                                        if (currentlyInside != bouttons_oui_non[i].mouseInside)
+                                        {
+                                            bouttons_oui_non[i].mouseInside = currentlyInside;
+                                            stateChanged = SDL_TRUE;
+                                        }
                                     }
-                                    else
+                                    if (stateChanged)
                                     {
-                                        if ((event.motion.x < 630) && (event.motion.x > 600) && (event.motion.y < position_texte.y + 30) && (event.motion.y > position_texte.y))
+                                        if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                                            SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+                                        if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                                        cases.h = 30;
+                                        cases.w = 30;
+                                        for (int i = 0; i < 2; i++)
                                         {
-                                            dessiner_rectangle(rendu, 600, position_texte.y, 30, 30);
-                                            SDL_RenderDrawLine(rendu, 600, position_texte.y, 630, position_texte.y + 30);
-                                            SDL_RenderDrawLine(rendu, 630, position_texte.y, 600, position_texte.y + 30);
-                                            rendu_modifie = SDL_TRUE;
-                                            SDL_RenderPresent(rendu);
+                                            cases.x = bouttons_oui_non[i].x1;
+                                            cases.y = bouttons_oui_non[i].y1;
+                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                SDL_ExitWithError("Impossible de dessiner les cases à cocher");
                                         }
-                                        if ((event.motion.x < 830) && (event.motion.x > 800) && (event.motion.y < position_texte.y + 30) && (event.motion.y > position_texte.y))
+                                        if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+                                        for (int i = 0; i < 2; ++i)
                                         {
-                                            dessiner_rectangle(rendu, 800, position_texte.y, 30, 30);
-                                            SDL_RenderDrawLine(rendu, 800, position_texte.y, 830, position_texte.y + 30);
-                                            SDL_RenderDrawLine(rendu, 830, position_texte.y, 800, position_texte.y + 30);
-                                            rendu_modifie = SDL_TRUE;
-                                            SDL_RenderPresent(rendu);
+                                            if (bouttons_oui_non[i].mouseInside)
+                                            {
+                                                dessiner_rectangle(rendu, bouttons_oui_non[i].x1, bouttons_oui_non[i].y1, 30, 30);
+                                                SDL_RenderDrawLine(rendu, bouttons_oui_non[i].x2, bouttons_oui_non[i].y1, bouttons_oui_non[i].x1, bouttons_oui_non[i].y2);
+                                                SDL_RenderDrawLine(rendu, bouttons_oui_non[i].x1, bouttons_oui_non[i].y1, bouttons_oui_non[i].x2, bouttons_oui_non[i].y2);
+                                            }
                                         }
+                                        SDL_RenderPresent(rendu);
                                     }
 
                                     while (SDL_PollEvent(&event))
@@ -3174,16 +3437,16 @@ void simplifier_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                         case SDL_MOUSEBUTTONDOWN:
                                             if (event.button.button == SDL_BUTTON_LEFT)
                                             {
-                                                if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                                                if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                                                     oui_non = SDL_FALSE;
                                                 else
                                                 {
-                                                    if ((event.button.x < 630) && (event.button.x > 600) && (event.button.y < position_texte.y + 30) && (event.button.y > position_texte.y))
+                                                    if ((event.button.x < bouttons_oui_non[0].x2) && (event.button.x > bouttons_oui_non[0].x1) && (event.button.y < bouttons_oui_non[0].y2) && (event.button.y > bouttons_oui_non[0].y1))
                                                     {
                                                         ajout_poly_ensemble(&Tete_Ensemble, Tete_Poly2);
                                                         oui_non = SDL_FALSE;
                                                     }
-                                                    if ((event.button.x < 830) && (event.button.x > 800) && (event.button.y < position_texte.y + 30) && (event.button.y > position_texte.y))
+                                                    if ((event.button.x < bouttons_oui_non[1].x2) && (event.button.x > bouttons_oui_non[1].x1) && (event.button.y < bouttons_oui_non[1].y2) && (event.button.y > bouttons_oui_non[1].y1))
                                                     {
                                                         oui_non = SDL_FALSE;
                                                     }
@@ -3221,6 +3484,7 @@ void simplifier_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         limiter_FPS(temps_limite); // -----> Limiter la vitesse du programme
     }
 
+    free(bouttons);
     TTF_CloseFont(police2);
     TTF_CloseFont(police3);
     TTF_CloseFont(police4);
@@ -3242,29 +3506,30 @@ void evaluer_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
     int valeur1 = -1;
     float valeur = -1;
     unsigned int temps_limite = 0, cpt = 0;
-
     SDL_Texture *texture_p3 = NULL;
     SDL_Surface *page3 = NULL, *texte = NULL;
     TTF_Font *police2 = NULL, *police3 = NULL, *police4 = NULL;
     SDL_Rect position_textures, position_texte, cases;
     SDL_Event event;
-    SDL_bool sortir_tache = SDL_FALSE, rendu_modifie = SDL_TRUE;
-    
-    page3 = IMG_Load("images/03.jpg");
+    SDL_bool sortir_tache = SDL_FALSE;
+    Rectangle boutton_retour = {3, 100, 260, 632, 687, SDL_FALSE};
+    Rectangle *bouttons = (Rectangle *)malloc(20 * sizeof(Rectangle));
+
+    page3 = IMG_Load("assets/images/03.jpg");
     if (page3 == NULL)
         SDL_ExitWithError("Impossible de charger l'image");
 
-    police2 = TTF_OpenFont("polices/times.ttf", 40);
+    police2 = TTF_OpenFont("assets/polices/times.ttf", 40);
     if (police2 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police2, TTF_STYLE_BOLD | TTF_STYLE_ITALIC | TTF_STYLE_UNDERLINE);
 
-    police3 = TTF_OpenFont("polices/times.ttf", 25);
+    police3 = TTF_OpenFont("assets/polices/times.ttf", 25);
     if (police3 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
 
-    police4 = TTF_OpenFont("polices/times.ttf", 15);
+    police4 = TTF_OpenFont("assets/polices/times.ttf", 15);
     if (police4 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -3288,7 +3553,12 @@ void evaluer_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         Tete_Poly1 = Poly->adr1;
         position_texte.x = 280;
         position_texte.y += 50;
-        coord_y[cpt] = position_texte.y;
+        bouttons[cpt].page = 3;
+        bouttons[cpt].x1 = 230;
+        bouttons[cpt].x2 = 260;
+        bouttons[cpt].y1 = 150 + 50 * cpt;
+        bouttons[cpt].y2 = 180 + 50 * cpt;
+        bouttons[cpt].mouseInside = SDL_FALSE;
         cpt++;
         sprintf(chaine_char, "P%d = ", cpt);
         texte = TTF_RenderText_Blended(police3, chaine_char, NOIR);
@@ -3350,54 +3620,101 @@ void evaluer_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         SDL_ExitWithError("Impossible de charger la texture (dans la mémoire)");
     if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-    SDL_RenderPresent(rendu);
 
+    if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    cases.h = 30;
+    cases.w = 30;
+    for (int i = 0; i < cpt; i++)
+    {
+        cases.x = bouttons[i].x1;
+        cases.y = bouttons[i].y1;
+        if (SDL_RenderFillRect(rendu, &cases) != 0)
+            SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+    }
     if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
         SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    SDL_RenderPresent(rendu);
 
     while (!sortir_tache)
     {
         temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-        if (rendu_modifie)
+        // Dessiner une bordure rouge si le boutton de retour est survolé
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_bool stateChanged = SDL_FALSE;
+        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+        if (currentlyInside != boutton_retour.mouseInside)
+        {
+            boutton_retour.mouseInside = currentlyInside;
+            stateChanged = SDL_TRUE;
+        }
+        if (stateChanged)
         {
             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                 SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-
             if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-            cases.x = 230;
             cases.h = 30;
             cases.w = 30;
             for (int i = 0; i < cpt; i++)
             {
-                cases.y = coord_y[i];
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
                 if (SDL_RenderFillRect(rendu, &cases) != 0)
                     SDL_ExitWithError("Impossible de dessiner les cases à cocher");
             }
-            rendu_modifie = SDL_FALSE;
-            SDL_RenderPresent(rendu);
             if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-        }
 
-        if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
-        {
-            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-            rendu_modifie = SDL_TRUE;
+            if (boutton_retour.mouseInside)
+            {
+                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+            }
             SDL_RenderPresent(rendu);
         }
-        for (int i = 0; i < cpt; i++)
+
+        // Dessiner une bordure et une croix si les cases à cocher sont survolées
+        stateChanged = SDL_FALSE;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        for (int i = 0; i < cpt; ++i)
         {
-            if ((event.motion.x < 260) && (event.motion.x > 230) && (event.motion.y < coord_y[i] + 30) && (event.motion.y > coord_y[i]))
+            currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons[i]);
+            if (currentlyInside != bouttons[i].mouseInside)
             {
-                dessiner_rectangle(rendu, 230, coord_y[i], 30, 30);
-                SDL_RenderDrawLine(rendu, 230, coord_y[i], 260, coord_y[i] + 30);
-                SDL_RenderDrawLine(rendu, 260, coord_y[i], 230, coord_y[i] + 30);
-                rendu_modifie = SDL_TRUE;
-                SDL_RenderPresent(rendu);
-                break;
+                bouttons[i].mouseInside = currentlyInside;
+                stateChanged = SDL_TRUE;
             }
+        }
+        if (stateChanged)
+        {
+            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+            if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+            cases.h = 30;
+            cases.w = 30;
+            for (int i = 0; i < cpt; i++)
+            {
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
+                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                    SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+            }
+            if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+            for (int i = 0; i < cpt; ++i)
+            {
+                if (bouttons[i].mouseInside)
+                {
+                    dessiner_rectangle(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2 - bouttons[i].x1, bouttons[i].y2 - bouttons[i].y1);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2, bouttons[i].y2);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x2, bouttons[i].y1, bouttons[i].x1, bouttons[i].y2);
+                }
+            }
+            SDL_RenderPresent(rendu);
         }
 
         while (SDL_PollEvent(&event))
@@ -3407,18 +3724,18 @@ void evaluer_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT)
                 {
-                    if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                    if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                         sortir_tache = SDL_TRUE;
                     else
                     {
                         for (int i = 0; i < cpt; i++)
                         {
-                            if ((event.button.x < 260) && (event.button.x > 230) && (event.button.y < coord_y[i] + 30) && (event.button.y > coord_y[i]))
+                            if ((event.button.x < bouttons[i].x2) && (event.button.x > bouttons[i].x1) && (event.button.y < bouttons[i].y2) && (event.button.y > bouttons[i].y1))
                             {
                                 //-----------------------------------------------Evaluation du polynome------------------------------------------------------
-                                Tete_Poly1 = adr_maillon_ens(Tete_Ensemble, i+1)->adr1;
+                                Tete_Poly1 = adr_maillon_ens(Tete_Ensemble, i + 1)->adr1;
                                 Tete_Poly2 = Tete_Poly1;
-                                page3 = IMG_Load("images/03.jpg");
+                                page3 = IMG_Load("assets/images/03.jpg");
                                 if (page3 == NULL)
                                     SDL_ExitWithError("Impossible de charger l'image");
                                 position_texte.x = 80;
@@ -3487,7 +3804,7 @@ void evaluer_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                 if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                     SDL_ExitWithError("Impossible de copier la texture dans le rendu");
                                 SDL_RenderPresent(rendu);
-                                
+
                                 position_texte.x += texte->w;
                                 if (SDL_lire_reel(&valeur, rendu, &page3, position_texte.x, position_texte.y) == -1)
                                     goto FIN_EVALUATION;
@@ -3501,27 +3818,37 @@ void evaluer_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                 texture_p3 = SDL_CreateTextureFromSurface(rendu, page3);
                                 if (texture_p3 == NULL)
                                     SDL_ExitWithError("Impossible de créer la texture");
+                                if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                                    SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+                                SDL_RenderPresent(rendu);
 
                                 SDL_bool sortir_tache2 = SDL_FALSE;
-                                rendu_modifie = SDL_TRUE;
                                 while (!sortir_tache2)
                                 {
                                     temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-                                    if (rendu_modifie)
+                                    // Dessiner une bordure rouge si le boutton de retour est survolé
+                                    int mouseX, mouseY;
+                                    SDL_GetMouseState(&mouseX, &mouseY);
+                                    SDL_bool stateChanged = SDL_FALSE;
+                                    SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+                                    if (currentlyInside != boutton_retour.mouseInside)
+                                    {
+                                        boutton_retour.mouseInside = currentlyInside;
+                                        stateChanged = SDL_TRUE;
+                                    }
+                                    if (stateChanged)
                                     {
                                         if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                             SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-                                        SDL_RenderPresent(rendu);                                        
-                                        rendu_modifie = SDL_FALSE;
-                                    }
-                                    if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
-                                    {
-                                        dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-                                        rendu_modifie = SDL_TRUE;
+
+                                        if (boutton_retour.mouseInside)
+                                        {
+                                            dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+                                        }
                                         SDL_RenderPresent(rendu);
                                     }
-                                    
+
                                     while (SDL_PollEvent(&event))
                                     {
                                         switch (event.type)
@@ -3529,7 +3856,7 @@ void evaluer_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                         case SDL_MOUSEBUTTONDOWN:
                                             if (event.button.button == SDL_BUTTON_LEFT)
                                             {
-                                                if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                                                if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                                                     sortir_tache2 = SDL_TRUE;
                                             }
                                             continue;
@@ -3561,6 +3888,7 @@ void evaluer_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         limiter_FPS(temps_limite); // -----> Limiter la vitesse du programme
     }
 FIN_EVALUATION:
+    free(bouttons);
     TTF_CloseFont(police2);
     TTF_CloseFont(police3);
     TTF_CloseFont(police4);
@@ -3578,31 +3906,32 @@ void addition_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
     LLC_Poly *Poly = Tete_Ensemble;
     Monome *Tete_Poly1 = NULL, *Tete_Poly2 = NULL, *Tete_Poly3 = NULL;
     char chaine_char[30] = "";
-    int coord_y[20] = {0};
     unsigned int temps_limite = 0, cpt = 0, nb_polys = 0;
-
     SDL_Texture *texture_p3 = NULL;
     SDL_Surface *page3 = NULL, *texte = NULL;
     TTF_Font *police2 = NULL, *police3 = NULL, *police4 = NULL;
     SDL_Rect position_textures, position_texte, cases;
     SDL_Event event;
-    SDL_bool sortir_tache = SDL_FALSE, rendu_modifie = SDL_TRUE;
+    SDL_bool sortir_tache = SDL_FALSE;
+    Rectangle btn_selected = {3, 0, 0, 0, 0, SDL_FALSE};
+    Rectangle boutton_retour = {3, 100, 260, 632, 687, SDL_FALSE};
+    Rectangle *bouttons = (Rectangle *)malloc(20 * sizeof(Rectangle));
 
-    page3 = IMG_Load("images/03.jpg");
+    page3 = IMG_Load("assets/images/03.jpg");
     if (page3 == NULL)
         SDL_ExitWithError("Impossible de charger l'image");
 
-    police2 = TTF_OpenFont("polices/times.ttf", 40);
+    police2 = TTF_OpenFont("assets/polices/times.ttf", 40);
     if (police2 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police2, TTF_STYLE_BOLD | TTF_STYLE_ITALIC | TTF_STYLE_UNDERLINE);
 
-    police3 = TTF_OpenFont("polices/times.ttf", 25);
+    police3 = TTF_OpenFont("assets/polices/times.ttf", 25);
     if (police3 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
 
-    police4 = TTF_OpenFont("polices/times.ttf", 15);
+    police4 = TTF_OpenFont("assets/polices/times.ttf", 15);
     if (police4 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -3626,7 +3955,12 @@ void addition_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         Tete_Poly1 = Poly->adr1;
         position_texte.x = 280;
         position_texte.y += 50;
-        coord_y[cpt] = position_texte.y;
+        bouttons[cpt].page = 3;
+        bouttons[cpt].x1 = 230;
+        bouttons[cpt].x2 = 260;
+        bouttons[cpt].y1 = 150 + 50 * cpt;
+        bouttons[cpt].y2 = 180 + 50 * cpt;
+        bouttons[cpt].mouseInside = SDL_FALSE;
         cpt++;
         sprintf(chaine_char, "P%d = ", cpt);
         texte = TTF_RenderText_Blended(police3, chaine_char, NOIR);
@@ -3688,60 +4022,117 @@ void addition_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         SDL_ExitWithError("Impossible de charger la texture (dans la mémoire)");
     if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-    SDL_RenderPresent(rendu);
 
+    if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    cases.h = 30;
+    cases.w = 30;
+    for (int i = 0; i < cpt; i++)
+    {
+        cases.x = bouttons[i].x1;
+        cases.y = bouttons[i].y1;
+        if (SDL_RenderFillRect(rendu, &cases) != 0)
+            SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+    }
     if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
         SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    SDL_RenderPresent(rendu);
 
     while (!sortir_tache)
     {
         temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-        if (rendu_modifie)
+        // Dessiner une bordure rouge si le boutton de retour est survolé
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_bool stateChanged = SDL_FALSE;
+        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+        if (currentlyInside != boutton_retour.mouseInside)
         {
+            boutton_retour.mouseInside = currentlyInside;
+            stateChanged = SDL_TRUE;
+        }
+        if (stateChanged)
+        {
+            // Copier la texture du départ (page 3)
             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                 SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-
+            // Dessiner les cases à cocher
             if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-            cases.x = 230;
             cases.h = 30;
             cases.w = 30;
             for (int i = 0; i < cpt; i++)
             {
-                cases.y = coord_y[i];
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
                 if (SDL_RenderFillRect(rendu, &cases) != 0)
                     SDL_ExitWithError("Impossible de dessiner les cases à cocher");
             }
             if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
             if (nb_polys == 1)
             {
-                dessiner_rectangle(rendu, 230, coord_y[cpt], 30, 30);
-                SDL_RenderDrawLine(rendu, 230, coord_y[cpt], 260, coord_y[cpt] + 30);
-                SDL_RenderDrawLine(rendu, 260, coord_y[cpt], 230, coord_y[cpt] + 30);
+                dessiner_rectangle(rendu, btn_selected.x1, btn_selected.y1, 30, 30);
+                SDL_RenderDrawLine(rendu, btn_selected.x1, btn_selected.y1, btn_selected.x2, btn_selected.y2);
+                SDL_RenderDrawLine(rendu, btn_selected.x2, btn_selected.y1, btn_selected.x1, btn_selected.y2);
             }
-            rendu_modifie = SDL_FALSE;
+            if (boutton_retour.mouseInside)
+            {
+                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+            }
             SDL_RenderPresent(rendu);
         }
 
-        if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
+        // Dessiner une bordure et une croix si les caches à cocher sont survolées
+        stateChanged = SDL_FALSE;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        for (int i = 0; i < cpt; ++i)
         {
-            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-            rendu_modifie = SDL_TRUE;
-            SDL_RenderPresent(rendu);
-        }
-        for (int i = 0; i < cpt; i++)
-        {
-            if ((event.motion.x < 260) && (event.motion.x > 230) && (event.motion.y < coord_y[i] + 30) && (event.motion.y > coord_y[i]))
+            currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons[i]);
+            if (currentlyInside != bouttons[i].mouseInside)
             {
-                dessiner_rectangle(rendu, 230, coord_y[i], 30, 30);
-                SDL_RenderDrawLine(rendu, 230, coord_y[i], 260, coord_y[i] + 30);
-                SDL_RenderDrawLine(rendu, 260, coord_y[i], 230, coord_y[i] + 30);
-                rendu_modifie = SDL_TRUE;
-                SDL_RenderPresent(rendu);
-                break;
+                bouttons[i].mouseInside = currentlyInside;
+                stateChanged = SDL_TRUE;
             }
+        }
+        if (stateChanged)
+        {
+            // Copier la texture du départ (page 3)
+            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+            // Dessiner les cases à cocher
+            if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+            cases.h = 30;
+            cases.w = 30;
+            for (int i = 0; i < cpt; i++)
+            {
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
+                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                    SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+            }
+            if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+            if (nb_polys == 1)
+            {
+                dessiner_rectangle(rendu, btn_selected.x1, btn_selected.y1, 30, 30);
+                SDL_RenderDrawLine(rendu, btn_selected.x1, btn_selected.y1, btn_selected.x2, btn_selected.y2);
+                SDL_RenderDrawLine(rendu, btn_selected.x2, btn_selected.y1, btn_selected.x1, btn_selected.y2);
+            }
+            for (int i = 0; i < cpt; ++i)
+            {
+                if (bouttons[i].mouseInside)
+                {
+                    dessiner_rectangle(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2 - bouttons[i].x1, bouttons[i].y2 - bouttons[i].y1);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2, bouttons[i].y2);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x2, bouttons[i].y1, bouttons[i].x1, bouttons[i].y2);
+                }
+            }
+            SDL_RenderPresent(rendu);
         }
 
         while (SDL_PollEvent(&event))
@@ -3751,7 +4142,7 @@ void addition_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT)
                 {
-                    if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                    if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                         sortir_tache = SDL_TRUE;
                     else
                     {
@@ -3759,22 +4150,22 @@ void addition_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                         {
                             if (nb_polys == 0)
                             {
-                                if ((event.button.x < 260) && (event.button.x > 230) && (event.button.y < coord_y[i] + 30) && (event.button.y > coord_y[i]))
+                                if ((event.button.x < bouttons[i].x2) && (event.button.x > bouttons[i].x1) && (event.button.y < bouttons[i].y2) && (event.button.y > bouttons[i].y1))
                                 {
                                     Tete_Poly1 = adr_maillon_ens(Tete_Ensemble, i + 1)->adr1;
-                                    coord_y[cpt] = coord_y[i];
+                                    btn_selected = bouttons[i];
                                     nb_polys = 1;
                                 }
                             }
-                            else    // nb_polys == 1
+                            else // nb_polys == 1 (nombre de polyonomes selectionnés : 0 ou 1, si 2 faire l'addition)
                             {
-                                if ((event.button.x < 260) && (event.button.x > 230) && (event.button.y < coord_y[i] + 30) && (event.button.y > coord_y[i]))
+                                if ((event.button.x < bouttons[i].x2) && (event.button.x > bouttons[i].x1) && (event.button.y < bouttons[i].y2) && (event.button.y > bouttons[i].y1))
                                 {
                                     //-----------------------------------------------Addition des polynomes------------------------------------------------------
                                     Tete_Poly2 = adr_maillon_ens(Tete_Ensemble, i + 1)->adr1;
                                     Tete_Poly3 = add_poly(Tete_Poly1, Tete_Poly2);
                                     Tete_Poly1 = Tete_Poly3;
-                                    page3 = IMG_Load("images/03.jpg");
+                                    page3 = IMG_Load("assets/images/03.jpg");
                                     if (page3 == NULL)
                                         SDL_ExitWithError("Impossible de charger l'image");
                                     position_texte.x = 80;
@@ -3855,62 +4246,105 @@ void addition_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                         SDL_ExitWithError("Impossible de créer la texture");
                                     if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+
+                                    Rectangle bouttons_oui_non[] = {
+                                        {3, 600, 630, position_texte.y, position_texte.y + 30, SDL_FALSE},
+                                        {3, 800, 830, position_texte.y, position_texte.y + 30, SDL_FALSE}};
+                                    if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+                                        SDL_ExitWithError("Impossible de changer la couleuur du rendu");
+                                    cases.x = bouttons_oui_non[0].x1;
+                                    cases.y = bouttons_oui_non[0].y1;
+                                    cases.h = 30;
+                                    cases.w = 30;
+                                    if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                        SDL_ExitWithError("Impossible de dessiner les cases");
+                                    cases.x = bouttons_oui_non[1].x1;
+                                    cases.y = bouttons_oui_non[1].y1;
+                                    if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                        SDL_ExitWithError("Impossible de dessiner les cases");
+                                    if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
                                     SDL_RenderPresent(rendu);
 
                                     SDL_bool oui_non = SDL_TRUE;
-                                    rendu_modifie = SDL_TRUE;
                                     while (oui_non)
                                     {
                                         temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-                                        if (rendu_modifie)
+                                        // Dessiner une bordure rouge si le boutton de retour est survolé
+                                        int mouseX, mouseY;
+                                        SDL_GetMouseState(&mouseX, &mouseY);
+                                        SDL_bool stateChanged = SDL_FALSE;
+                                        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+                                        if (currentlyInside != boutton_retour.mouseInside)
+                                        {
+                                            boutton_retour.mouseInside = currentlyInside;
+                                            stateChanged = SDL_TRUE;
+                                        }
+                                        if (stateChanged)
                                         {
                                             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                                 SDL_ExitWithError("Impossible de copier la texture dans le rendu");
                                             if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
-                                                SDL_ExitWithError("Impossible de changer la couleuur du rendu");
-                                            cases.x = 600;
-                                            cases.y = position_texte.y;
+                                                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
                                             cases.h = 30;
                                             cases.w = 30;
-                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
-                                                SDL_ExitWithError("Impossible de dessiner les cases");
-                                            cases.x = 800;
-                                            cases.y = position_texte.y;
-                                            cases.h = 30;
-                                            cases.w = 30;
-                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
-                                                SDL_ExitWithError("Impossible de dessiner les cases");
+                                            for (int i = 0; i < 2; i++)
+                                            {
+                                                cases.x = bouttons_oui_non[i].x1;
+                                                cases.y = bouttons_oui_non[i].y1;
+                                                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                    SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+                                            }
                                             if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                                                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-                                            rendu_modifie = SDL_FALSE;
+                                            if (boutton_retour.mouseInside)
+                                            {
+                                                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+                                            }
                                             SDL_RenderPresent(rendu);
                                         }
 
-                                        if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
+                                        // Dessiner une bordure rouge si un des bouttons (oui et non) est survolé
+                                        stateChanged = SDL_FALSE;
+                                        SDL_GetMouseState(&mouseX, &mouseY);
+                                        for (int i = 0; i < 2; i++)
                                         {
-                                            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-                                            rendu_modifie = SDL_TRUE;
-                                            SDL_RenderPresent(rendu);
+                                            currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons_oui_non[i]);
+                                            if (currentlyInside != bouttons_oui_non[i].mouseInside)
+                                            {
+                                                bouttons_oui_non[i].mouseInside = currentlyInside;
+                                                stateChanged = SDL_TRUE;
+                                            }
                                         }
-                                        else
+                                        if (stateChanged)
                                         {
-                                            if ((event.motion.x < 630) && (event.motion.x > 600) && (event.motion.y < position_texte.y + 30) && (event.motion.y > position_texte.y))
+                                            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                                                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+                                            if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+                                                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                                            cases.h = 30;
+                                            cases.w = 30;
+                                            for (int i = 0; i < 2; i++)
                                             {
-                                                dessiner_rectangle(rendu, 600, position_texte.y, 30, 30);
-                                                SDL_RenderDrawLine(rendu, 600, position_texte.y, 630, position_texte.y + 30);
-                                                SDL_RenderDrawLine(rendu, 630, position_texte.y, 600, position_texte.y + 30);
-                                                rendu_modifie = SDL_TRUE;
-                                                SDL_RenderPresent(rendu);
+                                                cases.x = bouttons_oui_non[i].x1;
+                                                cases.y = bouttons_oui_non[i].y1;
+                                                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                    SDL_ExitWithError("Impossible de dessiner les cases à cocher");
                                             }
-                                            if ((event.motion.x < 830) && (event.motion.x > 800) && (event.motion.y < position_texte.y + 30) && (event.motion.y > position_texte.y))
+                                            if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+                                            for (int i = 0; i < 2; ++i)
                                             {
-                                                dessiner_rectangle(rendu, 800, position_texte.y, 30, 30);
-                                                SDL_RenderDrawLine(rendu, 800, position_texte.y, 830, position_texte.y + 30);
-                                                SDL_RenderDrawLine(rendu, 830, position_texte.y, 800, position_texte.y + 30);
-                                                rendu_modifie = SDL_TRUE;
-                                                SDL_RenderPresent(rendu);
+                                                if (bouttons_oui_non[i].mouseInside)
+                                                {
+                                                    dessiner_rectangle(rendu, bouttons_oui_non[i].x1, bouttons_oui_non[i].y1, 30, 30);
+                                                    SDL_RenderDrawLine(rendu, bouttons_oui_non[i].x2, bouttons_oui_non[i].y1, bouttons_oui_non[i].x1, bouttons_oui_non[i].y2);
+                                                    SDL_RenderDrawLine(rendu, bouttons_oui_non[i].x1, bouttons_oui_non[i].y1, bouttons_oui_non[i].x2, bouttons_oui_non[i].y2);
+                                                }
                                             }
+                                            SDL_RenderPresent(rendu);
                                         }
 
                                         while (SDL_PollEvent(&event))
@@ -3920,16 +4354,16 @@ void addition_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                             case SDL_MOUSEBUTTONDOWN:
                                                 if (event.button.button == SDL_BUTTON_LEFT)
                                                 {
-                                                    if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                                                    if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                                                         oui_non = SDL_FALSE;
                                                     else
                                                     {
-                                                        if ((event.button.x < 630) && (event.button.x > 600) && (event.button.y < position_texte.y + 30) && (event.button.y > position_texte.y))
+                                                        if ((event.button.x < bouttons_oui_non[0].x2) && (event.button.x > bouttons_oui_non[0].x1) && (event.button.y < bouttons_oui_non[0].y2) && (event.button.y > bouttons_oui_non[0].y1))
                                                         {
                                                             ajout_poly_ensemble(&Tete_Ensemble, Tete_Poly3);
                                                             oui_non = SDL_FALSE;
                                                         }
-                                                        if ((event.button.x < 830) && (event.button.x > 800) && (event.button.y < position_texte.y + 30) && (event.button.y > position_texte.y))
+                                                        if ((event.button.x < bouttons_oui_non[1].x2) && (event.button.x > bouttons_oui_non[1].x1) && (event.button.y < bouttons_oui_non[1].y2) && (event.button.y > bouttons_oui_non[1].y1))
                                                         {
                                                             oui_non = SDL_FALSE;
                                                         }
@@ -3968,6 +4402,7 @@ void addition_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         limiter_FPS(temps_limite); // -----> Limiter la vitesse du programme
     }
 
+    free(bouttons);
     TTF_CloseFont(police2);
     TTF_CloseFont(police3);
     TTF_CloseFont(police4);
@@ -3985,31 +4420,32 @@ void soustraction_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
     LLC_Poly *Poly = Tete_Ensemble, *Poly2 = Tete_Ensemble;
     Monome *Tete_Poly1 = NULL, *Tete_Poly2 = NULL, *Tete_Poly3 = NULL;
     char chaine_char[30] = "";
-    int coord_y[20] = {0};
     unsigned int temps_limite = 0, cpt = 0;
-
     SDL_Texture *texture_p3 = NULL;
     SDL_Surface *page3 = NULL, *texte = NULL;
     TTF_Font *police2 = NULL, *police3 = NULL, *police4 = NULL;
     SDL_Rect position_textures, position_texte, cases;
     SDL_Event event;
-    SDL_bool sortir_tache = SDL_FALSE, sortir_tache1 = SDL_FALSE, rendu_modifie = SDL_TRUE;
+    SDL_bool sortir_tache = SDL_FALSE, sortir_tache1 = SDL_FALSE;
+    Rectangle btn_selected = {3, 0, 0, 0, 0, SDL_FALSE};
+    Rectangle boutton_retour = {3, 100, 260, 632, 687, SDL_FALSE};
+    Rectangle *bouttons = (Rectangle *)malloc(20 * sizeof(Rectangle));
 
-    page3 = IMG_Load("images/03.jpg");
+    page3 = IMG_Load("assets/images/03.jpg");
     if (page3 == NULL)
         SDL_ExitWithError("Impossible de charger l'image");
 
-    police2 = TTF_OpenFont("polices/times.ttf", 40);
+    police2 = TTF_OpenFont("assets/polices/times.ttf", 40);
     if (police2 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police2, TTF_STYLE_BOLD | TTF_STYLE_ITALIC | TTF_STYLE_UNDERLINE);
 
-    police3 = TTF_OpenFont("polices/times.ttf", 25);
+    police3 = TTF_OpenFont("assets/polices/times.ttf", 25);
     if (police3 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
 
-    police4 = TTF_OpenFont("polices/times.ttf", 15);
+    police4 = TTF_OpenFont("assets/polices/times.ttf", 15);
     if (police4 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -4033,7 +4469,12 @@ void soustraction_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         Tete_Poly1 = Poly->adr1;
         position_texte.x = 280;
         position_texte.y += 50;
-        coord_y[cpt] = position_texte.y;
+        bouttons[cpt].page = 3;
+        bouttons[cpt].x1 = 230;
+        bouttons[cpt].x2 = 260;
+        bouttons[cpt].y1 = 150 + 50 * cpt;
+        bouttons[cpt].y2 = 180 + 50 * cpt;
+        bouttons[cpt].mouseInside = SDL_FALSE;
         cpt++;
         sprintf(chaine_char, "P%d = ", cpt);
         texte = TTF_RenderText_Blended(police3, chaine_char, NOIR);
@@ -4095,54 +4536,105 @@ void soustraction_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         SDL_ExitWithError("Impossible de charger la texture (dans la mémoire)");
     if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-    SDL_RenderPresent(rendu);
 
+    if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    cases.h = 30;
+    cases.w = 30;
+    for (int i = 0; i < cpt; i++)
+    {
+        cases.x = bouttons[i].x1;
+        cases.y = bouttons[i].y1;
+        if (SDL_RenderFillRect(rendu, &cases) != 0)
+            SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+    }
     if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
         SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    SDL_RenderPresent(rendu);
 
     while (!sortir_tache)
     {
         temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-        if (rendu_modifie)
+        // Dessiner une bordure rouge si le boutton de retour est survolé
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_bool stateChanged = SDL_FALSE;
+        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+        if (currentlyInside != boutton_retour.mouseInside)
         {
+            boutton_retour.mouseInside = currentlyInside;
+            stateChanged = SDL_TRUE;
+        }
+        if (stateChanged)
+        {
+            // Copier la texture du départ (page 3)
             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                 SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-
+            // Dessiner les cases à cocher
             if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-            cases.x = 230;
             cases.h = 30;
             cases.w = 30;
             for (int i = 0; i < cpt; i++)
             {
-                cases.y = coord_y[i];
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
                 if (SDL_RenderFillRect(rendu, &cases) != 0)
                     SDL_ExitWithError("Impossible de dessiner les cases à cocher");
             }
-            rendu_modifie = SDL_FALSE;
-            SDL_RenderPresent(rendu);
             if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-        }
 
-        if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
-        {
-            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-            rendu_modifie = SDL_TRUE;
+            if (boutton_retour.mouseInside)
+            {
+                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+            }
             SDL_RenderPresent(rendu);
         }
-        for (int i = 0; i < cpt; i++)
+
+        // Dessiner une bordure et une croix si les caches à cocher sont survolées
+        stateChanged = SDL_FALSE;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        for (int i = 0; i < cpt; ++i)
         {
-            if ((event.motion.x < 260) && (event.motion.x > 230) && (event.motion.y < coord_y[i] + 30) && (event.motion.y > coord_y[i]))
+            currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons[i]);
+            if (currentlyInside != bouttons[i].mouseInside)
             {
-                dessiner_rectangle(rendu, 230, coord_y[i], 30, 30);
-                SDL_RenderDrawLine(rendu, 230, coord_y[i], 260, coord_y[i] + 30);
-                SDL_RenderDrawLine(rendu, 260, coord_y[i], 230, coord_y[i] + 30);
-                rendu_modifie = SDL_TRUE;
-                SDL_RenderPresent(rendu);
-                break;
+                bouttons[i].mouseInside = currentlyInside;
+                stateChanged = SDL_TRUE;
             }
+        }
+        if (stateChanged)
+        {
+            // Copier la texture du départ (page 3)
+            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+            // Dessiner les cases à cocher
+            if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+            cases.h = 30;
+            cases.w = 30;
+            for (int i = 0; i < cpt; i++)
+            {
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
+                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                    SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+            }
+            if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+            for (int i = 0; i < cpt; ++i)
+            {
+                if (bouttons[i].mouseInside)
+                {
+                    dessiner_rectangle(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2 - bouttons[i].x1, bouttons[i].y2 - bouttons[i].y1);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2, bouttons[i].y2);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x2, bouttons[i].y1, bouttons[i].x1, bouttons[i].y2);
+                }
+            }
+            SDL_RenderPresent(rendu);
         }
 
         while (SDL_PollEvent(&event))
@@ -4152,32 +4644,32 @@ void soustraction_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT)
                 {
-                    if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                    if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                         sortir_tache = SDL_TRUE;
                     else
                     {
                         for (int i = 0; i < cpt; i++)
                         {
-                            if ((event.button.x < 260) && (event.button.x > 230) && (event.button.y < coord_y[i] + 30) && (event.button.y > coord_y[i]))
+                            if ((event.button.x < bouttons[i].x2) && (event.button.x > bouttons[i].x1) && (event.button.y < bouttons[i].y2) && (event.button.y > bouttons[i].y1))
                             {
-                                Tete_Poly2 = adr_maillon_ens(Tete_Ensemble, i+1)->adr1;
-                                coord_y[cpt] = coord_y[i];
+                                Tete_Poly2 = adr_maillon_ens(Tete_Ensemble, i + 1)->adr1;
+                                btn_selected = bouttons[i];
                                 //-----------------------------------------------Selection du 2eme polynome------------------------------------------------------
-                                page3 = IMG_Load("images/03.jpg");
+                                page3 = IMG_Load("assets/images/03.jpg");
                                 if (page3 == NULL)
                                     SDL_ExitWithError("Impossible de charger l'image");
 
-                                police2 = TTF_OpenFont("polices/times.ttf", 40);
+                                police2 = TTF_OpenFont("assets/polices/times.ttf", 40);
                                 if (police2 == NULL)
                                     SDL_ExitWithError("Impossible de charger la police Times New Romain");
                                 TTF_SetFontStyle(police2, TTF_STYLE_BOLD | TTF_STYLE_ITALIC | TTF_STYLE_UNDERLINE);
 
-                                police3 = TTF_OpenFont("polices/times.ttf", 25);
+                                police3 = TTF_OpenFont("assets/polices/times.ttf", 25);
                                 if (police3 == NULL)
                                     SDL_ExitWithError("Impossible de charger la police Times New Romain");
                                 TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
 
-                                police4 = TTF_OpenFont("polices/times.ttf", 15);
+                                police4 = TTF_OpenFont("assets/polices/times.ttf", 15);
                                 if (police4 == NULL)
                                     SDL_ExitWithError("Impossible de charger la police Times New Romain");
                                 TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -4203,7 +4695,12 @@ void soustraction_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                     Tete_Poly1 = Poly->adr1;
                                     position_texte.x = 280;
                                     position_texte.y += 50;
-                                    coord_y[cpt] = position_texte.y;
+                                    bouttons[cpt].page = 3;
+                                    bouttons[cpt].x1 = 230;
+                                    bouttons[cpt].x2 = 260;
+                                    bouttons[cpt].y1 = 150 + 50 * cpt;
+                                    bouttons[cpt].y2 = 180 + 50 * cpt;
+                                    bouttons[cpt].mouseInside = SDL_FALSE;
                                     cpt++;
                                     sprintf(chaine_char, "P%d = ", cpt);
                                     texte = TTF_RenderText_Blended(police3, chaine_char, NOIR);
@@ -4265,58 +4762,111 @@ void soustraction_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                     SDL_ExitWithError("Impossible de charger la texture (dans la mémoire)");
                                 if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                     SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-                                SDL_RenderPresent(rendu);
 
+                                if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+                                    SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                                cases.h = 30;
+                                cases.w = 30;
+                                for (int i = 0; i < cpt; i++)
+                                {
+                                    cases.x = bouttons[i].x1;
+                                    cases.y = bouttons[i].y1;
+                                    if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                        SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+                                }
                                 if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                                     SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                                SDL_RenderPresent(rendu);
 
-                                rendu_modifie = SDL_TRUE;
                                 while (!sortir_tache1)
                                 {
                                     temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-                                    if (rendu_modifie)
+                                    // Dessiner une bordure rouge si le boutton de retour est survolé
+                                    int mouseX, mouseY;
+                                    SDL_GetMouseState(&mouseX, &mouseY);
+                                    SDL_bool stateChanged = SDL_FALSE;
+                                    SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+                                    if (currentlyInside != boutton_retour.mouseInside)
                                     {
+                                        boutton_retour.mouseInside = currentlyInside;
+                                        stateChanged = SDL_TRUE;
+                                    }
+                                    if (stateChanged)
+                                    {
+                                        // Copier la texture du départ (page 3)
                                         if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                             SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-
+                                        // Dessiner les cases à cocher
                                         if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
                                             SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-                                        cases.x = 230;
                                         cases.h = 30;
                                         cases.w = 30;
                                         for (int i = 0; i < cpt; i++)
                                         {
-                                            cases.y = coord_y[i];
+                                            cases.x = bouttons[i].x1;
+                                            cases.y = bouttons[i].y1;
                                             if (SDL_RenderFillRect(rendu, &cases) != 0)
                                                 SDL_ExitWithError("Impossible de dessiner les cases à cocher");
                                         }
                                         if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                                             SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-                                        dessiner_rectangle(rendu, 230, coord_y[cpt], 30, 30);
-                                        SDL_RenderDrawLine(rendu, 230, coord_y[cpt], 260, coord_y[cpt] + 30);
-                                        SDL_RenderDrawLine(rendu, 260, coord_y[cpt], 230, coord_y[cpt] + 30);
-                                        rendu_modifie = SDL_FALSE;
+
+                                        dessiner_rectangle(rendu, btn_selected.x1, btn_selected.y1, 30, 30);
+                                        SDL_RenderDrawLine(rendu, btn_selected.x1, btn_selected.y1, btn_selected.x2, btn_selected.y2);
+                                        SDL_RenderDrawLine(rendu, btn_selected.x2, btn_selected.y1, btn_selected.x1, btn_selected.y2);
+                                        if (boutton_retour.mouseInside)
+                                        {
+                                            dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+                                        }
                                         SDL_RenderPresent(rendu);
                                     }
 
-                                    if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
+                                    // Dessiner une bordure et une croix si les caches à cocher sont survolées
+                                    stateChanged = SDL_FALSE;
+                                    SDL_GetMouseState(&mouseX, &mouseY);
+                                    for (int i = 0; i < cpt; ++i)
                                     {
-                                        dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-                                        rendu_modifie = SDL_TRUE;
-                                        SDL_RenderPresent(rendu);
-                                    }
-                                    for (int i = 0; i < cpt; i++)
-                                    {
-                                        if ((event.motion.x < 260) && (event.motion.x > 230) && (event.motion.y < coord_y[i] + 30) && (event.motion.y > coord_y[i]))
+                                        currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons[i]);
+                                        if (currentlyInside != bouttons[i].mouseInside)
                                         {
-                                            dessiner_rectangle(rendu, 230, coord_y[i], 30, 30);
-                                            SDL_RenderDrawLine(rendu, 230, coord_y[i], 260, coord_y[i] + 30);
-                                            SDL_RenderDrawLine(rendu, 260, coord_y[i], 230, coord_y[i] + 30);
-                                            rendu_modifie = SDL_TRUE;
-                                            SDL_RenderPresent(rendu);
-                                            break;
+                                            bouttons[i].mouseInside = currentlyInside;
+                                            stateChanged = SDL_TRUE;
                                         }
+                                    }
+                                    if (stateChanged)
+                                    {
+                                        // Copier la texture du départ (page 3)
+                                        if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                                            SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+                                        // Dessiner les cases à cocher
+                                        if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                                        cases.h = 30;
+                                        cases.w = 30;
+                                        for (int i = 0; i < cpt; i++)
+                                        {
+                                            cases.x = bouttons[i].x1;
+                                            cases.y = bouttons[i].y1;
+                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+                                        }
+                                        if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+                                        dessiner_rectangle(rendu, btn_selected.x1, btn_selected.y1, 30, 30);
+                                        SDL_RenderDrawLine(rendu, btn_selected.x1, btn_selected.y1, btn_selected.x2, btn_selected.y2);
+                                        SDL_RenderDrawLine(rendu, btn_selected.x2, btn_selected.y1, btn_selected.x1, btn_selected.y2);
+                                        for (int i = 0; i < cpt; ++i)
+                                        {
+                                            if (bouttons[i].mouseInside)
+                                            {
+                                                dessiner_rectangle(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2 - bouttons[i].x1, bouttons[i].y2 - bouttons[i].y1);
+                                                SDL_RenderDrawLine(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2, bouttons[i].y2);
+                                                SDL_RenderDrawLine(rendu, bouttons[i].x2, bouttons[i].y1, bouttons[i].x1, bouttons[i].y2);
+                                            }
+                                        }
+                                        SDL_RenderPresent(rendu);
                                     }
 
                                     while (SDL_PollEvent(&event))
@@ -4326,19 +4876,19 @@ void soustraction_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                         case SDL_MOUSEBUTTONDOWN:
                                             if (event.button.button == SDL_BUTTON_LEFT)
                                             {
-                                                if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                                                if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                                                     sortir_tache = SDL_TRUE;
                                                 else
                                                 {
                                                     for (int i = 0; i < cpt; i++)
                                                     {
-                                                        if ((event.button.x < 260) && (event.button.x > 230) && (event.button.y < coord_y[i] + 30) && (event.button.y > coord_y[i]))
+                                                        if ((event.button.x < bouttons[i].x2) && (event.button.x > bouttons[i].x1) && (event.button.y < bouttons[i].y2) && (event.button.y > bouttons[i].y1))
                                                         {
                                                             //-----------------------------------------------SOUSTRACTION des polynomes------------------------------------------------------
                                                             Tete_Poly3 = adr_maillon_ens(Tete_Ensemble, i + 1)->adr1;
                                                             Tete_Poly1 = add_poly(Tete_Poly2, inverse_poly(Tete_Poly3));
                                                             Tete_Poly3 = Tete_Poly1;
-                                                            page3 = IMG_Load("images/03.jpg");
+                                                            page3 = IMG_Load("assets/images/03.jpg");
                                                             if (page3 == NULL)
                                                                 SDL_ExitWithError("Impossible de charger l'image");
                                                             position_texte.x = 80;
@@ -4419,62 +4969,105 @@ void soustraction_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                                                 SDL_ExitWithError("Impossible de créer la texture");
                                                             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                                                 SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+
+                                                            Rectangle bouttons_oui_non[] = {
+                                                                {3, 600, 630, position_texte.y, position_texte.y + 30, SDL_FALSE},
+                                                                {3, 800, 830, position_texte.y, position_texte.y + 30, SDL_FALSE}};
+                                                            if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+                                                                SDL_ExitWithError("Impossible de changer la couleuur du rendu");
+                                                            cases.x = bouttons_oui_non[0].x1;
+                                                            cases.y = bouttons_oui_non[0].y1;
+                                                            cases.h = 30;
+                                                            cases.w = 30;
+                                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                                SDL_ExitWithError("Impossible de dessiner les cases");
+                                                            cases.x = bouttons_oui_non[1].x1;
+                                                            cases.y = bouttons_oui_non[1].y1;
+                                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                                SDL_ExitWithError("Impossible de dessiner les cases");
+                                                            if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                                                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
                                                             SDL_RenderPresent(rendu);
 
                                                             SDL_bool oui_non = SDL_TRUE;
-                                                            rendu_modifie = SDL_TRUE;
                                                             while (oui_non)
                                                             {
                                                                 temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-                                                                if (rendu_modifie)
+                                                                // Dessiner une bordure rouge si le boutton de retour est survolé
+                                                                int mouseX, mouseY;
+                                                                SDL_GetMouseState(&mouseX, &mouseY);
+                                                                SDL_bool stateChanged = SDL_FALSE;
+                                                                SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+                                                                if (currentlyInside != boutton_retour.mouseInside)
+                                                                {
+                                                                    boutton_retour.mouseInside = currentlyInside;
+                                                                    stateChanged = SDL_TRUE;
+                                                                }
+                                                                if (stateChanged)
                                                                 {
                                                                     if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                                                         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
                                                                     if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
-                                                                        SDL_ExitWithError("Impossible de changer la couleuur du rendu");
-                                                                    cases.x = 600;
-                                                                    cases.y = position_texte.y;
+                                                                        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
                                                                     cases.h = 30;
                                                                     cases.w = 30;
-                                                                    if (SDL_RenderFillRect(rendu, &cases) != 0)
-                                                                        SDL_ExitWithError("Impossible de dessiner les cases");
-                                                                    cases.x = 800;
-                                                                    cases.y = position_texte.y;
-                                                                    cases.h = 30;
-                                                                    cases.w = 30;
-                                                                    if (SDL_RenderFillRect(rendu, &cases) != 0)
-                                                                        SDL_ExitWithError("Impossible de dessiner les cases");
+                                                                    for (int i = 0; i < 2; i++)
+                                                                    {
+                                                                        cases.x = bouttons_oui_non[i].x1;
+                                                                        cases.y = bouttons_oui_non[i].y1;
+                                                                        if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                                            SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+                                                                    }
                                                                     if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                                                                         SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-                                                                    rendu_modifie = SDL_FALSE;
+                                                                    if (boutton_retour.mouseInside)
+                                                                    {
+                                                                        dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+                                                                    }
                                                                     SDL_RenderPresent(rendu);
                                                                 }
 
-                                                                if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
+                                                                // Dessiner une bordure rouge si un des bouttons (oui et non) est survolé
+                                                                stateChanged = SDL_FALSE;
+                                                                SDL_GetMouseState(&mouseX, &mouseY);
+                                                                for (int i = 0; i < 2; i++)
                                                                 {
-                                                                    dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-                                                                    rendu_modifie = SDL_TRUE;
-                                                                    SDL_RenderPresent(rendu);
+                                                                    currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons_oui_non[i]);
+                                                                    if (currentlyInside != bouttons_oui_non[i].mouseInside)
+                                                                    {
+                                                                        bouttons_oui_non[i].mouseInside = currentlyInside;
+                                                                        stateChanged = SDL_TRUE;
+                                                                    }
                                                                 }
-                                                                else
+                                                                if (stateChanged)
                                                                 {
-                                                                    if ((event.motion.x < 630) && (event.motion.x > 600) && (event.motion.y < position_texte.y + 30) && (event.motion.y > position_texte.y))
+                                                                    if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                                                                        SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+                                                                    if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+                                                                        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                                                                    cases.h = 30;
+                                                                    cases.w = 30;
+                                                                    for (int i = 0; i < 2; i++)
                                                                     {
-                                                                        dessiner_rectangle(rendu, 600, position_texte.y, 30, 30);
-                                                                        SDL_RenderDrawLine(rendu, 600, position_texte.y, 630, position_texte.y + 30);
-                                                                        SDL_RenderDrawLine(rendu, 630, position_texte.y, 600, position_texte.y + 30);
-                                                                        rendu_modifie = SDL_TRUE;
-                                                                        SDL_RenderPresent(rendu);
+                                                                        cases.x = bouttons_oui_non[i].x1;
+                                                                        cases.y = bouttons_oui_non[i].y1;
+                                                                        if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                                            SDL_ExitWithError("Impossible de dessiner les cases à cocher");
                                                                     }
-                                                                    if ((event.motion.x < 830) && (event.motion.x > 800) && (event.motion.y < position_texte.y + 30) && (event.motion.y > position_texte.y))
+                                                                    if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                                                        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+                                                                    for (int i = 0; i < 2; ++i)
                                                                     {
-                                                                        dessiner_rectangle(rendu, 800, position_texte.y, 30, 30);
-                                                                        SDL_RenderDrawLine(rendu, 800, position_texte.y, 830, position_texte.y + 30);
-                                                                        SDL_RenderDrawLine(rendu, 830, position_texte.y, 800, position_texte.y + 30);
-                                                                        rendu_modifie = SDL_TRUE;
-                                                                        SDL_RenderPresent(rendu);
+                                                                        if (bouttons_oui_non[i].mouseInside)
+                                                                        {
+                                                                            dessiner_rectangle(rendu, bouttons_oui_non[i].x1, bouttons_oui_non[i].y1, 30, 30);
+                                                                            SDL_RenderDrawLine(rendu, bouttons_oui_non[i].x2, bouttons_oui_non[i].y1, bouttons_oui_non[i].x1, bouttons_oui_non[i].y2);
+                                                                            SDL_RenderDrawLine(rendu, bouttons_oui_non[i].x1, bouttons_oui_non[i].y1, bouttons_oui_non[i].x2, bouttons_oui_non[i].y2);
+                                                                        }
                                                                     }
+                                                                    SDL_RenderPresent(rendu);
                                                                 }
 
                                                                 while (SDL_PollEvent(&event))
@@ -4484,16 +5077,16 @@ void soustraction_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                                                     case SDL_MOUSEBUTTONDOWN:
                                                                         if (event.button.button == SDL_BUTTON_LEFT)
                                                                         {
-                                                                            if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                                                                            if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                                                                                 oui_non = SDL_FALSE;
                                                                             else
                                                                             {
-                                                                                if ((event.button.x < 630) && (event.button.x > 600) && (event.button.y < position_texte.y + 30) && (event.button.y > position_texte.y))
+                                                                                if ((event.button.x < bouttons_oui_non[0].x2) && (event.button.x > bouttons_oui_non[0].x1) && (event.button.y < bouttons_oui_non[0].y2) && (event.button.y > bouttons_oui_non[0].y1))
                                                                                 {
                                                                                     ajout_poly_ensemble(&Tete_Ensemble, Tete_Poly3);
                                                                                     oui_non = SDL_FALSE;
                                                                                 }
-                                                                                if ((event.button.x < 830) && (event.button.x > 800) && (event.button.y < position_texte.y + 30) && (event.button.y > position_texte.y))
+                                                                                if ((event.button.x < bouttons_oui_non[1].x2) && (event.button.x > bouttons_oui_non[1].x1) && (event.button.y < bouttons_oui_non[1].y2) && (event.button.y > bouttons_oui_non[1].y1))
                                                                                 {
                                                                                     oui_non = SDL_FALSE;
                                                                                 }
@@ -4549,6 +5142,7 @@ void soustraction_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         limiter_FPS(temps_limite); // -----> Limiter la vitesse du programme
     }
 
+    free(bouttons);
     TTF_CloseFont(police2);
     TTF_CloseFont(police3);
     TTF_CloseFont(police4);
@@ -4566,31 +5160,32 @@ void multiplication_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
     LLC_Poly *Poly = Tete_Ensemble;
     Monome *Tete_Poly1 = NULL, *Tete_Poly2 = NULL, *Tete_Poly3 = NULL;
     char chaine_char[30] = "";
-    int coord_y[20] = {0};
     unsigned int temps_limite = 0, cpt = 0, nb_polys = 0;
-
     SDL_Texture *texture_p3 = NULL;
     SDL_Surface *page3 = NULL, *texte = NULL;
     TTF_Font *police2 = NULL, *police3 = NULL, *police4 = NULL;
     SDL_Rect position_textures, position_texte, cases;
     SDL_Event event;
-    SDL_bool sortir_tache = SDL_FALSE, rendu_modifie = SDL_TRUE;
+    SDL_bool sortir_tache = SDL_FALSE;
+    Rectangle btn_selected = {3, 0, 0, 0, 0, SDL_FALSE};
+    Rectangle boutton_retour = {3, 100, 260, 632, 687, SDL_FALSE};
+    Rectangle *bouttons = (Rectangle *)malloc(20 * sizeof(Rectangle));
 
-    page3 = IMG_Load("images/03.jpg");
+    page3 = IMG_Load("assets/images/03.jpg");
     if (page3 == NULL)
         SDL_ExitWithError("Impossible de charger l'image");
 
-    police2 = TTF_OpenFont("polices/times.ttf", 40);
+    police2 = TTF_OpenFont("assets/polices/times.ttf", 40);
     if (police2 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police2, TTF_STYLE_BOLD | TTF_STYLE_ITALIC | TTF_STYLE_UNDERLINE);
 
-    police3 = TTF_OpenFont("polices/times.ttf", 25);
+    police3 = TTF_OpenFont("assets/polices/times.ttf", 25);
     if (police3 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
 
-    police4 = TTF_OpenFont("polices/times.ttf", 15);
+    police4 = TTF_OpenFont("assets/polices/times.ttf", 15);
     if (police4 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -4614,7 +5209,12 @@ void multiplication_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         Tete_Poly1 = Poly->adr1;
         position_texte.x = 280;
         position_texte.y += 50;
-        coord_y[cpt] = position_texte.y;
+        bouttons[cpt].page = 3;
+        bouttons[cpt].x1 = 230;
+        bouttons[cpt].x2 = 260;
+        bouttons[cpt].y1 = 150 + 50 * cpt;
+        bouttons[cpt].y2 = 180 + 50 * cpt;
+        bouttons[cpt].mouseInside = SDL_FALSE;
         cpt++;
         sprintf(chaine_char, "P%d = ", cpt);
         texte = TTF_RenderText_Blended(police3, chaine_char, NOIR);
@@ -4678,58 +5278,116 @@ void multiplication_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
     SDL_RenderPresent(rendu);
 
+    if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    cases.h = 30;
+    cases.w = 30;
+    for (int i = 0; i < cpt; i++)
+    {
+        cases.x = bouttons[i].x1;
+        cases.y = bouttons[i].y1;
+        if (SDL_RenderFillRect(rendu, &cases) != 0)
+            SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+    }
     if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
         SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    SDL_RenderPresent(rendu);
 
     while (!sortir_tache)
     {
         temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-        if (rendu_modifie)
+        // Dessiner une bordure rouge si le boutton de retour est survolé
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_bool stateChanged = SDL_FALSE;
+        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+        if (currentlyInside != boutton_retour.mouseInside)
         {
+            boutton_retour.mouseInside = currentlyInside;
+            stateChanged = SDL_TRUE;
+        }
+        if (stateChanged)
+        {
+            // Copier la texture du départ (page 3)
             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                 SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-
+            // Dessiner les cases à cocher
             if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-            cases.x = 230;
             cases.h = 30;
             cases.w = 30;
             for (int i = 0; i < cpt; i++)
             {
-                cases.y = coord_y[i];
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
                 if (SDL_RenderFillRect(rendu, &cases) != 0)
                     SDL_ExitWithError("Impossible de dessiner les cases à cocher");
             }
             if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
             if (nb_polys == 1)
             {
-                dessiner_rectangle(rendu, 230, coord_y[cpt], 30, 30);
-                SDL_RenderDrawLine(rendu, 230, coord_y[cpt], 260, coord_y[cpt] + 30);
-                SDL_RenderDrawLine(rendu, 260, coord_y[cpt], 230, coord_y[cpt] + 30);
+                dessiner_rectangle(rendu, btn_selected.x1, btn_selected.y1, 30, 30);
+                SDL_RenderDrawLine(rendu, btn_selected.x1, btn_selected.y1, btn_selected.x2, btn_selected.y2);
+                SDL_RenderDrawLine(rendu, btn_selected.x2, btn_selected.y1, btn_selected.x1, btn_selected.y2);
             }
-            rendu_modifie = SDL_FALSE;
+            if (boutton_retour.mouseInside)
+            {
+                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+            }
             SDL_RenderPresent(rendu);
         }
 
-        if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
+        // Dessiner une bordure et une croix si les caches à cocher sont survolées
+        stateChanged = SDL_FALSE;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        for (int i = 0; i < cpt; ++i)
         {
-            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-            rendu_modifie = SDL_TRUE;
-            SDL_RenderPresent(rendu);
-        }
-        for (int i = 0; i < cpt; i++)
-        {
-            if ((event.motion.x < 260) && (event.motion.x > 230) && (event.motion.y < coord_y[i] + 30) && (event.motion.y > coord_y[i]))
+            currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons[i]);
+            if (currentlyInside != bouttons[i].mouseInside)
             {
-                dessiner_rectangle(rendu, 230, coord_y[i], 30, 30);
-                SDL_RenderDrawLine(rendu, 230, coord_y[i], 260, coord_y[i] + 30);
-                SDL_RenderDrawLine(rendu, 260, coord_y[i], 230, coord_y[i] + 30);
-                rendu_modifie = SDL_TRUE;
-                SDL_RenderPresent(rendu);
-                break;
+                bouttons[i].mouseInside = currentlyInside;
+                stateChanged = SDL_TRUE;
             }
+        }
+        if (stateChanged)
+        {
+            // Copier la texture du départ (page 3)
+            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+            // Dessiner les cases à cocher
+            if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+            cases.h = 30;
+            cases.w = 30;
+            for (int i = 0; i < cpt; i++)
+            {
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
+                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                    SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+            }
+            if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+            if (nb_polys == 1)
+            {
+                dessiner_rectangle(rendu, btn_selected.x1, btn_selected.y1, 30, 30);
+                SDL_RenderDrawLine(rendu, btn_selected.x1, btn_selected.y1, btn_selected.x2, btn_selected.y2);
+                SDL_RenderDrawLine(rendu, btn_selected.x2, btn_selected.y1, btn_selected.x1, btn_selected.y2);
+            }
+            for (int i = 0; i < cpt; ++i)
+            {
+                if (bouttons[i].mouseInside)
+                {
+                    dessiner_rectangle(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2 - bouttons[i].x1, bouttons[i].y2 - bouttons[i].y1);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2, bouttons[i].y2);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x2, bouttons[i].y1, bouttons[i].x1, bouttons[i].y2);
+                }
+            }
+            SDL_RenderPresent(rendu);
         }
 
         while (SDL_PollEvent(&event))
@@ -4739,7 +5397,7 @@ void multiplication_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT)
                 {
-                    if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                    if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                         sortir_tache = SDL_TRUE;
                     else
                     {
@@ -4747,22 +5405,22 @@ void multiplication_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                         {
                             if (nb_polys == 0)
                             {
-                                if ((event.button.x < 260) && (event.button.x > 230) && (event.button.y < coord_y[i] + 30) && (event.button.y > coord_y[i]))
+                                if ((event.button.x < bouttons[i].x2) && (event.button.x > bouttons[i].x1) && (event.button.y < bouttons[i].y2) && (event.button.y > bouttons[i].y1))
                                 {
                                     Tete_Poly1 = adr_maillon_ens(Tete_Ensemble, i + 1)->adr1;
-                                    coord_y[cpt] = coord_y[i];
+                                    btn_selected = bouttons[i];
                                     nb_polys = 1;
                                 }
                             }
-                            else // nb_polys == 1
+                            else // nb_polys == 1 (nombre de polyonomes selectionnés : 0 ou 1, si 2 faire l'addition)
                             {
-                                if ((event.button.x < 260) && (event.button.x > 230) && (event.button.y < coord_y[i] + 30) && (event.button.y > coord_y[i]))
+                                if ((event.button.x < bouttons[i].x2) && (event.button.x > bouttons[i].x1) && (event.button.y < bouttons[i].y2) && (event.button.y > bouttons[i].y1))
                                 {
                                     //-----------------------------------------------Addition des polynomes------------------------------------------------------
                                     Tete_Poly2 = adr_maillon_ens(Tete_Ensemble, i + 1)->adr1;
                                     Tete_Poly3 = mult_poly(Tete_Poly1, Tete_Poly2);
                                     Tete_Poly1 = Tete_Poly3;
-                                    page3 = IMG_Load("images/03.jpg");
+                                    page3 = IMG_Load("assets/images/03.jpg");
                                     if (page3 == NULL)
                                         SDL_ExitWithError("Impossible de charger l'image");
                                     position_texte.x = 80;
@@ -4845,60 +5503,104 @@ void multiplication_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
                                     SDL_RenderPresent(rendu);
 
+                                    Rectangle bouttons_oui_non[] = {
+                                        {3, 600, 630, position_texte.y, position_texte.y + 30, SDL_FALSE},
+                                        {3, 800, 830, position_texte.y, position_texte.y + 30, SDL_FALSE}};
+                                    if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+                                        SDL_ExitWithError("Impossible de changer la couleuur du rendu");
+                                    cases.x = bouttons_oui_non[0].x1;
+                                    cases.y = bouttons_oui_non[0].y1;
+                                    cases.h = 30;
+                                    cases.w = 30;
+                                    if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                        SDL_ExitWithError("Impossible de dessiner les cases");
+                                    cases.x = bouttons_oui_non[1].x1;
+                                    cases.y = bouttons_oui_non[1].y1;
+                                    if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                        SDL_ExitWithError("Impossible de dessiner les cases");
+                                    if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                                    SDL_RenderPresent(rendu);
+
                                     SDL_bool oui_non = SDL_TRUE;
-                                    rendu_modifie = SDL_TRUE;
                                     while (oui_non)
                                     {
                                         temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-                                        if (rendu_modifie)
+                                        // Dessiner une bordure rouge si le boutton de retour est survolé
+                                        int mouseX, mouseY;
+                                        SDL_GetMouseState(&mouseX, &mouseY);
+                                        SDL_bool stateChanged = SDL_FALSE;
+                                        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+                                        if (currentlyInside != boutton_retour.mouseInside)
+                                        {
+                                            boutton_retour.mouseInside = currentlyInside;
+                                            stateChanged = SDL_TRUE;
+                                        }
+                                        if (stateChanged)
                                         {
                                             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                                 SDL_ExitWithError("Impossible de copier la texture dans le rendu");
                                             if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
-                                                SDL_ExitWithError("Impossible de changer la couleuur du rendu");
-                                            cases.x = 600;
-                                            cases.y = position_texte.y;
+                                                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
                                             cases.h = 30;
                                             cases.w = 30;
-                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
-                                                SDL_ExitWithError("Impossible de dessiner les cases");
-                                            cases.x = 800;
-                                            cases.y = position_texte.y;
-                                            cases.h = 30;
-                                            cases.w = 30;
-                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
-                                                SDL_ExitWithError("Impossible de dessiner les cases");
+                                            for (int i = 0; i < 2; i++)
+                                            {
+                                                cases.x = bouttons_oui_non[i].x1;
+                                                cases.y = bouttons_oui_non[i].y1;
+                                                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                    SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+                                            }
                                             if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                                                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-                                            rendu_modifie = SDL_FALSE;
+                                            if (boutton_retour.mouseInside)
+                                            {
+                                                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+                                            }
                                             SDL_RenderPresent(rendu);
                                         }
 
-                                        if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
+                                        // Dessiner une bordure rouge si un des bouttons (oui et non) est survolé
+                                        stateChanged = SDL_FALSE;
+                                        SDL_GetMouseState(&mouseX, &mouseY);
+                                        for (int i = 0; i < 2; i++)
                                         {
-                                            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-                                            rendu_modifie = SDL_TRUE;
-                                            SDL_RenderPresent(rendu);
+                                            currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons_oui_non[i]);
+                                            if (currentlyInside != bouttons_oui_non[i].mouseInside)
+                                            {
+                                                bouttons_oui_non[i].mouseInside = currentlyInside;
+                                                stateChanged = SDL_TRUE;
+                                            }
                                         }
-                                        else
+                                        if (stateChanged)
                                         {
-                                            if ((event.motion.x < 630) && (event.motion.x > 600) && (event.motion.y < position_texte.y + 30) && (event.motion.y > position_texte.y))
+                                            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                                                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+                                            if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+                                                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                                            cases.h = 30;
+                                            cases.w = 30;
+                                            for (int i = 0; i < 2; i++)
                                             {
-                                                dessiner_rectangle(rendu, 600, position_texte.y, 30, 30);
-                                                SDL_RenderDrawLine(rendu, 600, position_texte.y, 630, position_texte.y + 30);
-                                                SDL_RenderDrawLine(rendu, 630, position_texte.y, 600, position_texte.y + 30);
-                                                rendu_modifie = SDL_TRUE;
-                                                SDL_RenderPresent(rendu);
+                                                cases.x = bouttons_oui_non[i].x1;
+                                                cases.y = bouttons_oui_non[i].y1;
+                                                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                    SDL_ExitWithError("Impossible de dessiner les cases à cocher");
                                             }
-                                            if ((event.motion.x < 830) && (event.motion.x > 800) && (event.motion.y < position_texte.y + 30) && (event.motion.y > position_texte.y))
+                                            if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+                                            for (int i = 0; i < 2; ++i)
                                             {
-                                                dessiner_rectangle(rendu, 800, position_texte.y, 30, 30);
-                                                SDL_RenderDrawLine(rendu, 800, position_texte.y, 830, position_texte.y + 30);
-                                                SDL_RenderDrawLine(rendu, 830, position_texte.y, 800, position_texte.y + 30);
-                                                rendu_modifie = SDL_TRUE;
-                                                SDL_RenderPresent(rendu);
+                                                if (bouttons_oui_non[i].mouseInside)
+                                                {
+                                                    dessiner_rectangle(rendu, bouttons_oui_non[i].x1, bouttons_oui_non[i].y1, 30, 30);
+                                                    SDL_RenderDrawLine(rendu, bouttons_oui_non[i].x2, bouttons_oui_non[i].y1, bouttons_oui_non[i].x1, bouttons_oui_non[i].y2);
+                                                    SDL_RenderDrawLine(rendu, bouttons_oui_non[i].x1, bouttons_oui_non[i].y1, bouttons_oui_non[i].x2, bouttons_oui_non[i].y2);
+                                                }
                                             }
+                                            SDL_RenderPresent(rendu);
                                         }
 
                                         while (SDL_PollEvent(&event))
@@ -4908,16 +5610,16 @@ void multiplication_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                             case SDL_MOUSEBUTTONDOWN:
                                                 if (event.button.button == SDL_BUTTON_LEFT)
                                                 {
-                                                    if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                                                    if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                                                         oui_non = SDL_FALSE;
                                                     else
                                                     {
-                                                        if ((event.button.x < 630) && (event.button.x > 600) && (event.button.y < position_texte.y + 30) && (event.button.y > position_texte.y))
+                                                        if ((event.button.x < bouttons_oui_non[0].x2) && (event.button.x > bouttons_oui_non[0].x1) && (event.button.y < bouttons_oui_non[0].y2) && (event.button.y > bouttons_oui_non[0].y1))
                                                         {
                                                             ajout_poly_ensemble(&Tete_Ensemble, Tete_Poly3);
                                                             oui_non = SDL_FALSE;
                                                         }
-                                                        if ((event.button.x < 830) && (event.button.x > 800) && (event.button.y < position_texte.y + 30) && (event.button.y > position_texte.y))
+                                                        if ((event.button.x < bouttons_oui_non[1].x2) && (event.button.x > bouttons_oui_non[1].x1) && (event.button.y < bouttons_oui_non[1].y2) && (event.button.y > bouttons_oui_non[1].y1))
                                                         {
                                                             oui_non = SDL_FALSE;
                                                         }
@@ -4956,6 +5658,7 @@ void multiplication_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         limiter_FPS(temps_limite); // -----> Limiter la vitesse du programme
     }
 
+    free(bouttons);
     TTF_CloseFont(police2);
     TTF_CloseFont(police3);
     TTF_CloseFont(police4);
@@ -4973,31 +5676,32 @@ void division_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
     LLC_Poly *Poly = Tete_Ensemble, *Poly2 = Tete_Ensemble;
     Monome *Tete_Poly1 = NULL, *Tete_Poly2 = NULL, *Tete_quotient = NULL, *Tete_reste = NULL;
     char chaine_char[30] = "";
-    int coord_y[20] = {0};
     unsigned int temps_limite = 0, cpt = 0;
-
     SDL_Texture *texture_p3 = NULL;
     SDL_Surface *page3 = NULL, *texte = NULL;
     TTF_Font *police2 = NULL, *police3 = NULL, *police4 = NULL;
     SDL_Rect position_textures, position_texte, cases;
     SDL_Event event;
-    SDL_bool sortir_tache = SDL_FALSE, sortir_tache1 = SDL_FALSE, rendu_modifie = SDL_TRUE;
+    SDL_bool sortir_tache = SDL_FALSE, sortir_tache1 = SDL_FALSE;
+    Rectangle btn_selected = {3, 0, 0, 0, 0, SDL_FALSE};
+    Rectangle boutton_retour = {3, 100, 260, 632, 687, SDL_FALSE};
+    Rectangle *bouttons = (Rectangle *)malloc(20 * sizeof(Rectangle));
 
-    page3 = IMG_Load("images/03.jpg");
+    page3 = IMG_Load("assets/images/03.jpg");
     if (page3 == NULL)
         SDL_ExitWithError("Impossible de charger l'image");
 
-    police2 = TTF_OpenFont("polices/times.ttf", 40);
+    police2 = TTF_OpenFont("assets/polices/times.ttf", 40);
     if (police2 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police2, TTF_STYLE_BOLD | TTF_STYLE_ITALIC | TTF_STYLE_UNDERLINE);
 
-    police3 = TTF_OpenFont("polices/times.ttf", 25);
+    police3 = TTF_OpenFont("assets/polices/times.ttf", 25);
     if (police3 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
 
-    police4 = TTF_OpenFont("polices/times.ttf", 15);
+    police4 = TTF_OpenFont("assets/polices/times.ttf", 15);
     if (police4 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -5021,7 +5725,12 @@ void division_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         Tete_Poly1 = Poly->adr1;
         position_texte.x = 280;
         position_texte.y += 50;
-        coord_y[cpt] = position_texte.y;
+        bouttons[cpt].page = 3;
+        bouttons[cpt].x1 = 230;
+        bouttons[cpt].x2 = 260;
+        bouttons[cpt].y1 = 150 + 50 * cpt;
+        bouttons[cpt].y2 = 180 + 50 * cpt;
+        bouttons[cpt].mouseInside = SDL_FALSE;
         cpt++;
         sprintf(chaine_char, "P%d = ", cpt);
         texte = TTF_RenderText_Blended(police3, chaine_char, NOIR);
@@ -5083,55 +5792,106 @@ void division_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         SDL_ExitWithError("Impossible de charger la texture (dans la mémoire)");
     if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-    SDL_RenderPresent(rendu);
 
+    if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    cases.h = 30;
+    cases.w = 30;
+    for (int i = 0; i < cpt; i++)
+    {
+        cases.x = bouttons[i].x1;
+        cases.y = bouttons[i].y1;
+        if (SDL_RenderFillRect(rendu, &cases) != 0)
+            SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+    }
     if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
         SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    SDL_RenderPresent(rendu);
 
     SDL_bool oui_non = SDL_TRUE;
     while (!sortir_tache)
     {
         temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-        if (rendu_modifie)
+        // Dessiner une bordure rouge si le boutton de retour est survolé
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_bool stateChanged = SDL_FALSE;
+        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+        if (currentlyInside != boutton_retour.mouseInside)
         {
+            boutton_retour.mouseInside = currentlyInside;
+            stateChanged = SDL_TRUE;
+        }
+        if (stateChanged)
+        {
+            // Copier la texture du départ (page 3)
             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                 SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-
+            // Dessiner les cases à cocher
             if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-            cases.x = 230;
             cases.h = 30;
             cases.w = 30;
             for (int i = 0; i < cpt; i++)
             {
-                cases.y = coord_y[i];
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
                 if (SDL_RenderFillRect(rendu, &cases) != 0)
                     SDL_ExitWithError("Impossible de dessiner les cases à cocher");
             }
-            rendu_modifie = SDL_FALSE;
-            SDL_RenderPresent(rendu);
             if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-        }
 
-        if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
-        {
-            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-            rendu_modifie = SDL_TRUE;
+            if (boutton_retour.mouseInside)
+            {
+                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+            }
             SDL_RenderPresent(rendu);
         }
-        for (int i = 0; i < cpt; i++)
+
+        // Dessiner une bordure et une croix si les caches à cocher sont survolées
+        stateChanged = SDL_FALSE;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        for (int i = 0; i < cpt; ++i)
         {
-            if ((event.motion.x < 260) && (event.motion.x > 230) && (event.motion.y < coord_y[i] + 30) && (event.motion.y > coord_y[i]))
+            currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons[i]);
+            if (currentlyInside != bouttons[i].mouseInside)
             {
-                dessiner_rectangle(rendu, 230, coord_y[i], 30, 30);
-                SDL_RenderDrawLine(rendu, 230, coord_y[i], 260, coord_y[i] + 30);
-                SDL_RenderDrawLine(rendu, 260, coord_y[i], 230, coord_y[i] + 30);
-                rendu_modifie = SDL_TRUE;
-                SDL_RenderPresent(rendu);
-                break;
+                bouttons[i].mouseInside = currentlyInside;
+                stateChanged = SDL_TRUE;
             }
+        }
+        if (stateChanged)
+        {
+            // Copier la texture du départ (page 3)
+            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+            // Dessiner les cases à cocher
+            if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+            cases.h = 30;
+            cases.w = 30;
+            for (int i = 0; i < cpt; i++)
+            {
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
+                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                    SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+            }
+            if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+            for (int i = 0; i < cpt; ++i)
+            {
+                if (bouttons[i].mouseInside)
+                {
+                    dessiner_rectangle(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2 - bouttons[i].x1, bouttons[i].y2 - bouttons[i].y1);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2, bouttons[i].y2);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x2, bouttons[i].y1, bouttons[i].x1, bouttons[i].y2);
+                }
+            }
+            SDL_RenderPresent(rendu);
         }
 
         while (SDL_PollEvent(&event))
@@ -5141,32 +5901,32 @@ void division_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT)
                 {
-                    if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                    if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                         sortir_tache = SDL_TRUE;
                     else
                     {
                         for (int i = 0; i < cpt; i++)
                         {
-                            if ((event.button.x < 260) && (event.button.x > 230) && (event.button.y < coord_y[i] + 30) && (event.button.y > coord_y[i]))
+                            if ((event.button.x < bouttons[i].x2) && (event.button.x > bouttons[i].x1) && (event.button.y < bouttons[i].y2) && (event.button.y > bouttons[i].y1))
                             {
                                 Tete_Poly2 = adr_maillon_ens(Tete_Ensemble, i + 1)->adr1;
-                                coord_y[cpt] = coord_y[i];
+                                btn_selected = bouttons[i];
                                 //-----------------------------------------------Selection du 2eme polynome------------------------------------------------------
-                                page3 = IMG_Load("images/03.jpg");
+                                page3 = IMG_Load("assets/images/03.jpg");
                                 if (page3 == NULL)
                                     SDL_ExitWithError("Impossible de charger l'image");
 
-                                police2 = TTF_OpenFont("polices/times.ttf", 40);
+                                police2 = TTF_OpenFont("assets/polices/times.ttf", 40);
                                 if (police2 == NULL)
                                     SDL_ExitWithError("Impossible de charger la police Times New Romain");
                                 TTF_SetFontStyle(police2, TTF_STYLE_BOLD | TTF_STYLE_ITALIC | TTF_STYLE_UNDERLINE);
 
-                                police3 = TTF_OpenFont("polices/times.ttf", 25);
+                                police3 = TTF_OpenFont("assets/polices/times.ttf", 25);
                                 if (police3 == NULL)
                                     SDL_ExitWithError("Impossible de charger la police Times New Romain");
                                 TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
 
-                                police4 = TTF_OpenFont("polices/times.ttf", 15);
+                                police4 = TTF_OpenFont("assets/polices/times.ttf", 15);
                                 if (police4 == NULL)
                                     SDL_ExitWithError("Impossible de charger la police Times New Romain");
                                 TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -5192,7 +5952,12 @@ void division_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                     Tete_Poly1 = Poly->adr1;
                                     position_texte.x = 280;
                                     position_texte.y += 50;
-                                    coord_y[cpt] = position_texte.y;
+                                    bouttons[cpt].page = 3;
+                                    bouttons[cpt].x1 = 230;
+                                    bouttons[cpt].x2 = 260;
+                                    bouttons[cpt].y1 = 150 + 50 * cpt;
+                                    bouttons[cpt].y2 = 180 + 50 * cpt;
+                                    bouttons[cpt].mouseInside = SDL_FALSE;
                                     cpt++;
                                     sprintf(chaine_char, "P%d = ", cpt);
                                     texte = TTF_RenderText_Blended(police3, chaine_char, NOIR);
@@ -5256,56 +6021,110 @@ void division_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                     SDL_ExitWithError("Impossible de copier la texture dans le rendu");
                                 SDL_RenderPresent(rendu);
 
+                                if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+                                    SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                                cases.h = 30;
+                                cases.w = 30;
+                                for (int i = 0; i < cpt; i++)
+                                {
+                                    cases.x = bouttons[i].x1;
+                                    cases.y = bouttons[i].y1;
+                                    if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                        SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+                                }
                                 if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                                     SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                                SDL_RenderPresent(rendu);
 
-                                rendu_modifie = SDL_TRUE;
                                 while (!sortir_tache1)
                                 {
                                     temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-                                    if (rendu_modifie)
+                                    // Dessiner une bordure rouge si le boutton de retour est survolé
+                                    int mouseX, mouseY;
+                                    SDL_GetMouseState(&mouseX, &mouseY);
+                                    SDL_bool stateChanged = SDL_FALSE;
+                                    SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+                                    if (currentlyInside != boutton_retour.mouseInside)
                                     {
+                                        boutton_retour.mouseInside = currentlyInside;
+                                        stateChanged = SDL_TRUE;
+                                    }
+                                    if (stateChanged)
+                                    {
+                                        // Copier la texture du départ (page 3)
                                         if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                             SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-
+                                        // Dessiner les cases à cocher
                                         if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
                                             SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-                                        cases.x = 230;
                                         cases.h = 30;
                                         cases.w = 30;
                                         for (int i = 0; i < cpt; i++)
                                         {
-                                            cases.y = coord_y[i];
+                                            cases.x = bouttons[i].x1;
+                                            cases.y = bouttons[i].y1;
                                             if (SDL_RenderFillRect(rendu, &cases) != 0)
                                                 SDL_ExitWithError("Impossible de dessiner les cases à cocher");
                                         }
                                         if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                                             SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-                                        dessiner_rectangle(rendu, 230, coord_y[cpt], 30, 30);
-                                        SDL_RenderDrawLine(rendu, 230, coord_y[cpt], 260, coord_y[cpt] + 30);
-                                        SDL_RenderDrawLine(rendu, 260, coord_y[cpt], 230, coord_y[cpt] + 30);
-                                        rendu_modifie = SDL_FALSE;
+
+                                        dessiner_rectangle(rendu, btn_selected.x1, btn_selected.y1, 30, 30);
+                                        SDL_RenderDrawLine(rendu, btn_selected.x1, btn_selected.y1, btn_selected.x2, btn_selected.y2);
+                                        SDL_RenderDrawLine(rendu, btn_selected.x2, btn_selected.y1, btn_selected.x1, btn_selected.y2);
+                                        if (boutton_retour.mouseInside)
+                                        {
+                                            dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+                                        }
                                         SDL_RenderPresent(rendu);
                                     }
 
-                                    if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
+                                    // Dessiner une bordure et une croix si les caches à cocher sont survolées
+                                    stateChanged = SDL_FALSE;
+                                    SDL_GetMouseState(&mouseX, &mouseY);
+                                    for (int i = 0; i < cpt; ++i)
                                     {
-                                        dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-                                        rendu_modifie = SDL_TRUE;
-                                        SDL_RenderPresent(rendu);
-                                    }
-                                    for (int i = 0; i < cpt; i++)
-                                    {
-                                        if ((event.motion.x < 260) && (event.motion.x > 230) && (event.motion.y < coord_y[i] + 30) && (event.motion.y > coord_y[i]))
+                                        currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons[i]);
+                                        if (currentlyInside != bouttons[i].mouseInside)
                                         {
-                                            dessiner_rectangle(rendu, 230, coord_y[i], 30, 30);
-                                            SDL_RenderDrawLine(rendu, 230, coord_y[i], 260, coord_y[i] + 30);
-                                            SDL_RenderDrawLine(rendu, 260, coord_y[i], 230, coord_y[i] + 30);
-                                            rendu_modifie = SDL_TRUE;
-                                            SDL_RenderPresent(rendu);
-                                            break;
+                                            bouttons[i].mouseInside = currentlyInside;
+                                            stateChanged = SDL_TRUE;
                                         }
+                                    }
+                                    if (stateChanged)
+                                    {
+                                        // Copier la texture du départ (page 3)
+                                        if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                                            SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+                                        // Dessiner les cases à cocher
+                                        if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                                        cases.h = 30;
+                                        cases.w = 30;
+                                        for (int i = 0; i < cpt; i++)
+                                        {
+                                            cases.x = bouttons[i].x1;
+                                            cases.y = bouttons[i].y1;
+                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+                                        }
+                                        if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+                                        dessiner_rectangle(rendu, btn_selected.x1, btn_selected.y1, 30, 30);
+                                        SDL_RenderDrawLine(rendu, btn_selected.x1, btn_selected.y1, btn_selected.x2, btn_selected.y2);
+                                        SDL_RenderDrawLine(rendu, btn_selected.x2, btn_selected.y1, btn_selected.x1, btn_selected.y2);
+                                        for (int i = 0; i < cpt; ++i)
+                                        {
+                                            if (bouttons[i].mouseInside)
+                                            {
+                                                dessiner_rectangle(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2 - bouttons[i].x1, bouttons[i].y2 - bouttons[i].y1);
+                                                SDL_RenderDrawLine(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2, bouttons[i].y2);
+                                                SDL_RenderDrawLine(rendu, bouttons[i].x2, bouttons[i].y1, bouttons[i].x1, bouttons[i].y2);
+                                            }
+                                        }
+                                        SDL_RenderPresent(rendu);
                                     }
 
                                     while (SDL_PollEvent(&event))
@@ -5315,20 +6134,20 @@ void division_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                         case SDL_MOUSEBUTTONDOWN:
                                             if (event.button.button == SDL_BUTTON_LEFT)
                                             {
-                                                if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                                                if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                                                     sortir_tache = SDL_TRUE;
                                                 else
                                                 {
                                                     for (int i = 0; i < cpt; i++)
                                                     {
-                                                        if ((event.button.x < 260) && (event.button.x > 230) && (event.button.y < coord_y[i] + 30) && (event.button.y > coord_y[i]))
+                                                        if ((event.button.x < bouttons[i].x2) && (event.button.x > bouttons[i].x1) && (event.button.y < bouttons[i].y2) && (event.button.y > bouttons[i].y1))
                                                         {
                                                             //-----------------------------------------------DIVISION des polynomes------------------------------------------------------
                                                             Tete_Poly1 = adr_maillon_ens(Tete_Ensemble, i + 1)->adr1;
                                                             if (div_poly(Tete_Poly2, Tete_Poly1, &Tete_quotient, &Tete_reste) == 0)
                                                             {
                                                                 Tete_Poly1 = Tete_quotient;
-                                                                page3 = IMG_Load("images/03.jpg");
+                                                                page3 = IMG_Load("assets/images/03.jpg");
                                                                 if (page3 == NULL)
                                                                     SDL_ExitWithError("Impossible de charger l'image");
                                                                 position_texte.x = 80;
@@ -5461,60 +6280,103 @@ void division_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                                                     SDL_ExitWithError("Impossible de copier la texture dans le rendu");
                                                                 SDL_RenderPresent(rendu);
 
-                                                                
-                                                                rendu_modifie = SDL_TRUE;
+                                                                Rectangle bouttons_oui_non[] = {
+                                                                    {3, 600, 630, position_texte.y, position_texte.y + 30, SDL_FALSE},
+                                                                    {3, 800, 830, position_texte.y, position_texte.y + 30, SDL_FALSE}};
+                                                                if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+                                                                    SDL_ExitWithError("Impossible de changer la couleuur du rendu");
+                                                                cases.x = bouttons_oui_non[0].x1;
+                                                                cases.y = bouttons_oui_non[0].y1;
+                                                                cases.h = 30;
+                                                                cases.w = 30;
+                                                                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                                    SDL_ExitWithError("Impossible de dessiner les cases");
+                                                                cases.x = bouttons_oui_non[1].x1;
+                                                                cases.y = bouttons_oui_non[1].y1;
+                                                                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                                    SDL_ExitWithError("Impossible de dessiner les cases");
+                                                                if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                                                    SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                                                                SDL_RenderPresent(rendu);
+
                                                                 while (oui_non)
                                                                 {
                                                                     temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-                                                                    if (rendu_modifie)
+                                                                    // Dessiner une bordure rouge si le boutton de retour est survolé
+                                                                    int mouseX, mouseY;
+                                                                    SDL_GetMouseState(&mouseX, &mouseY);
+                                                                    SDL_bool stateChanged = SDL_FALSE;
+                                                                    SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+                                                                    if (currentlyInside != boutton_retour.mouseInside)
+                                                                    {
+                                                                        boutton_retour.mouseInside = currentlyInside;
+                                                                        stateChanged = SDL_TRUE;
+                                                                    }
+                                                                    if (stateChanged)
                                                                     {
                                                                         if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                                                             SDL_ExitWithError("Impossible de copier la texture dans le rendu");
                                                                         if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
-                                                                            SDL_ExitWithError("Impossible de changer la couleuur du rendu");
-                                                                        cases.x = 600;
-                                                                        cases.y = position_texte.y;
+                                                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
                                                                         cases.h = 30;
                                                                         cases.w = 30;
-                                                                        if (SDL_RenderFillRect(rendu, &cases) != 0)
-                                                                            SDL_ExitWithError("Impossible de dessiner les cases");
-                                                                        cases.x = 800;
-                                                                        cases.y = position_texte.y;
-                                                                        cases.h = 30;
-                                                                        cases.w = 30;
-                                                                        if (SDL_RenderFillRect(rendu, &cases) != 0)
-                                                                            SDL_ExitWithError("Impossible de dessiner les cases");
+                                                                        for (int i = 0; i < 2; i++)
+                                                                        {
+                                                                            cases.x = bouttons_oui_non[i].x1;
+                                                                            cases.y = bouttons_oui_non[i].y1;
+                                                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                                                SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+                                                                        }
                                                                         if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                                                                             SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-                                                                        rendu_modifie = SDL_FALSE;
+                                                                        if (boutton_retour.mouseInside)
+                                                                        {
+                                                                            dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+                                                                        }
                                                                         SDL_RenderPresent(rendu);
                                                                     }
 
-                                                                    if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
+                                                                    // Dessiner une bordure rouge si un des bouttons (oui et non) est survolé
+                                                                    stateChanged = SDL_FALSE;
+                                                                    SDL_GetMouseState(&mouseX, &mouseY);
+                                                                    for (int i = 0; i < 2; i++)
                                                                     {
-                                                                        dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-                                                                        rendu_modifie = SDL_TRUE;
-                                                                        SDL_RenderPresent(rendu);
+                                                                        currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons_oui_non[i]);
+                                                                        if (currentlyInside != bouttons_oui_non[i].mouseInside)
+                                                                        {
+                                                                            bouttons_oui_non[i].mouseInside = currentlyInside;
+                                                                            stateChanged = SDL_TRUE;
+                                                                        }
                                                                     }
-                                                                    else
+                                                                    if (stateChanged)
                                                                     {
-                                                                        if ((event.motion.x < 630) && (event.motion.x > 600) && (event.motion.y < position_texte.y + 30) && (event.motion.y > position_texte.y))
+                                                                        if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                                                                            SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+                                                                        if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+                                                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                                                                        cases.h = 30;
+                                                                        cases.w = 30;
+                                                                        for (int i = 0; i < 2; i++)
                                                                         {
-                                                                            dessiner_rectangle(rendu, 600, position_texte.y, 30, 30);
-                                                                            SDL_RenderDrawLine(rendu, 600, position_texte.y, 630, position_texte.y + 30);
-                                                                            SDL_RenderDrawLine(rendu, 630, position_texte.y, 600, position_texte.y + 30);
-                                                                            rendu_modifie = SDL_TRUE;
-                                                                            SDL_RenderPresent(rendu);
+                                                                            cases.x = bouttons_oui_non[i].x1;
+                                                                            cases.y = bouttons_oui_non[i].y1;
+                                                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                                                SDL_ExitWithError("Impossible de dessiner les cases à cocher");
                                                                         }
-                                                                        if ((event.motion.x < 830) && (event.motion.x > 800) && (event.motion.y < position_texte.y + 30) && (event.motion.y > position_texte.y))
+                                                                        if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+                                                                        for (int i = 0; i < 2; ++i)
                                                                         {
-                                                                            dessiner_rectangle(rendu, 800, position_texte.y, 30, 30);
-                                                                            SDL_RenderDrawLine(rendu, 800, position_texte.y, 830, position_texte.y + 30);
-                                                                            SDL_RenderDrawLine(rendu, 830, position_texte.y, 800, position_texte.y + 30);
-                                                                            rendu_modifie = SDL_TRUE;
-                                                                            SDL_RenderPresent(rendu);
+                                                                            if (bouttons_oui_non[i].mouseInside)
+                                                                            {
+                                                                                dessiner_rectangle(rendu, bouttons_oui_non[i].x1, bouttons_oui_non[i].y1, 30, 30);
+                                                                                SDL_RenderDrawLine(rendu, bouttons_oui_non[i].x2, bouttons_oui_non[i].y1, bouttons_oui_non[i].x1, bouttons_oui_non[i].y2);
+                                                                                SDL_RenderDrawLine(rendu, bouttons_oui_non[i].x1, bouttons_oui_non[i].y1, bouttons_oui_non[i].x2, bouttons_oui_non[i].y2);
+                                                                            }
                                                                         }
+                                                                        SDL_RenderPresent(rendu);
                                                                     }
 
                                                                     while (SDL_PollEvent(&event))
@@ -5524,17 +6386,17 @@ void division_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                                                         case SDL_MOUSEBUTTONDOWN:
                                                                             if (event.button.button == SDL_BUTTON_LEFT)
                                                                             {
-                                                                                if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                                                                                if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                                                                                     oui_non = SDL_FALSE;
                                                                                 else
                                                                                 {
-                                                                                    if ((event.button.x < 630) && (event.button.x > 600) && (event.button.y < position_texte.y + 30) && (event.button.y > position_texte.y))
+                                                                                    if ((event.button.x < bouttons_oui_non[0].x2) && (event.button.x > bouttons_oui_non[0].x1) && (event.button.y < bouttons_oui_non[0].y2) && (event.button.y > bouttons_oui_non[0].y1))
                                                                                     {
                                                                                         ajout_poly_ensemble(&Tete_Ensemble, Tete_quotient);
                                                                                         ajout_poly_ensemble(&Tete_Ensemble, Tete_reste);
                                                                                         oui_non = SDL_FALSE;
                                                                                     }
-                                                                                    if ((event.button.x < 830) && (event.button.x > 800) && (event.button.y < position_texte.y + 30) && (event.button.y > position_texte.y))
+                                                                                    if ((event.button.x < bouttons_oui_non[1].x2) && (event.button.x > bouttons_oui_non[1].x1) && (event.button.y < bouttons_oui_non[1].y2) && (event.button.y > bouttons_oui_non[1].y1))
                                                                                     {
                                                                                         oui_non = SDL_FALSE;
                                                                                     }
@@ -5555,9 +6417,9 @@ void division_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                                                 sortir_tache1 = SDL_TRUE;
                                                                 break;
                                                             }
-                                                            else    // Division sur 0 !!!
+                                                            else // Division sur 0 !!!
                                                             {
-                                                                page3 = IMG_Load("images/03.jpg");
+                                                                page3 = IMG_Load("assets/images/03.jpg");
                                                                 if (page3 == NULL)
                                                                     SDL_ExitWithError("Impossible de charger l'image");
                                                                 position_texte.x = 500;
@@ -5568,25 +6430,34 @@ void division_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                                                 texture_p3 = SDL_CreateTextureFromSurface(rendu, page3);
                                                                 if (texture_p3 == NULL)
                                                                     SDL_ExitWithError("Impossible de créer la texture");
+                                                                if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                                                                    SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+                                                                SDL_RenderPresent(rendu);
 
                                                                 oui_non = SDL_TRUE;
-                                                                rendu_modifie = SDL_TRUE;
                                                                 while (oui_non)
                                                                 {
                                                                     temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-                                                                    if (rendu_modifie)
+                                                                    // Dessiner une bordure rouge si le boutton de retour est survolé
+                                                                    int mouseX, mouseY;
+                                                                    SDL_GetMouseState(&mouseX, &mouseY);
+                                                                    SDL_bool stateChanged = SDL_FALSE;
+                                                                    SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+                                                                    if (currentlyInside != boutton_retour.mouseInside)
+                                                                    {
+                                                                        boutton_retour.mouseInside = currentlyInside;
+                                                                        stateChanged = SDL_TRUE;
+                                                                    }
+                                                                    if (stateChanged)
                                                                     {
                                                                         if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                                                             SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-                                                                        rendu_modifie = SDL_FALSE;
-                                                                        SDL_RenderPresent(rendu);
-                                                                    }
 
-                                                                    if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
-                                                                    {
-                                                                        dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-                                                                        rendu_modifie = SDL_TRUE;
+                                                                        if (boutton_retour.mouseInside)
+                                                                        {
+                                                                            dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+                                                                        }
                                                                         SDL_RenderPresent(rendu);
                                                                     }
 
@@ -5597,7 +6468,7 @@ void division_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                                                         case SDL_MOUSEBUTTONDOWN:
                                                                             if (event.button.button == SDL_BUTTON_LEFT)
                                                                             {
-                                                                                if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                                                                                if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                                                                                     oui_non = SDL_FALSE;
                                                                             }
                                                                             continue;
@@ -5651,6 +6522,7 @@ void division_polynomes_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         limiter_FPS(temps_limite); // -----> Limiter la vitesse du programme
     }
 
+    free(bouttons);
     TTF_CloseFont(police2);
     TTF_CloseFont(police3);
     TTF_CloseFont(police4);
@@ -5668,31 +6540,31 @@ void deriver_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
     LLC_Poly *Poly = Tete_Ensemble;
     Monome *Tete_Poly1 = NULL, *Tete_Poly2 = NULL;
     char chaine_char[30] = "";
-    int coord_y[20] = {0};
-
     SDL_Texture *texture_p3 = NULL;
     SDL_Surface *page3 = NULL, *texte = NULL;
     TTF_Font *police2 = NULL, *police3 = NULL, *police4 = NULL;
     SDL_Rect position_textures, position_texte, cases;
     SDL_Event event;
-    SDL_bool sortir_tache = SDL_FALSE, rendu_modifie = SDL_TRUE;
+    SDL_bool sortir_tache = SDL_FALSE;
     unsigned int temps_limite = 0, cpt = 0;
+    Rectangle boutton_retour = {3, 100, 260, 632, 687, SDL_FALSE};
+    Rectangle *bouttons = (Rectangle *)malloc(20 * sizeof(Rectangle));
 
-    page3 = IMG_Load("images/03.jpg");
+    page3 = IMG_Load("assets/images/03.jpg");
     if (page3 == NULL)
         SDL_ExitWithError("Impossible de charger l'image");
 
-    police2 = TTF_OpenFont("polices/times.ttf", 40);
+    police2 = TTF_OpenFont("assets/polices/times.ttf", 40);
     if (police2 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police2, TTF_STYLE_BOLD | TTF_STYLE_ITALIC | TTF_STYLE_UNDERLINE);
 
-    police3 = TTF_OpenFont("polices/times.ttf", 25);
+    police3 = TTF_OpenFont("assets/polices/times.ttf", 25);
     if (police3 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
 
-    police4 = TTF_OpenFont("polices/times.ttf", 15);
+    police4 = TTF_OpenFont("assets/polices/times.ttf", 15);
     if (police4 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -5716,7 +6588,12 @@ void deriver_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         Tete_Poly1 = Poly->adr1;
         position_texte.x = 280;
         position_texte.y += 50;
-        coord_y[cpt] = position_texte.y;
+        bouttons[cpt].page = 3;
+        bouttons[cpt].x1 = 230;
+        bouttons[cpt].x2 = 260;
+        bouttons[cpt].y1 = 150 + 50 * cpt;
+        bouttons[cpt].y2 = 180 + 50 * cpt;
+        bouttons[cpt].mouseInside = SDL_FALSE;
         cpt++;
         sprintf(chaine_char, "P%d = ", cpt);
         texte = TTF_RenderText_Blended(police3, chaine_char, NOIR);
@@ -5778,54 +6655,101 @@ void deriver_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         SDL_ExitWithError("Impossible de charger la texture (dans la mémoire)");
     if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-    SDL_RenderPresent(rendu);
 
+    if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    cases.h = 30;
+    cases.w = 30;
+    for (int i = 0; i < cpt; i++)
+    {
+        cases.x = bouttons[i].x1;
+        cases.y = bouttons[i].y1;
+        if (SDL_RenderFillRect(rendu, &cases) != 0)
+            SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+    }
     if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
         SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    SDL_RenderPresent(rendu);
 
     while (!sortir_tache)
     {
         temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-        if (rendu_modifie)
+        // Dessiner une bordure rouge si le boutton de retour est survolé
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_bool stateChanged = SDL_FALSE;
+        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+        if (currentlyInside != boutton_retour.mouseInside)
+        {
+            boutton_retour.mouseInside = currentlyInside;
+            stateChanged = SDL_TRUE;
+        }
+        if (stateChanged)
         {
             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                 SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-
             if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-            cases.x = 230;
             cases.h = 30;
             cases.w = 30;
             for (int i = 0; i < cpt; i++)
             {
-                cases.y = coord_y[i];
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
                 if (SDL_RenderFillRect(rendu, &cases) != 0)
                     SDL_ExitWithError("Impossible de dessiner les cases à cocher");
             }
-            rendu_modifie = SDL_FALSE;
-            SDL_RenderPresent(rendu);
             if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-        }
 
-        if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
-        {
-            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-            rendu_modifie = SDL_TRUE;
+            if (boutton_retour.mouseInside)
+            {
+                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+            }
             SDL_RenderPresent(rendu);
         }
-        for (int i = 0; i < cpt; i++)
+
+        // Dessiner une bordure et une croix si les caches à cocher sont survolées
+        stateChanged = SDL_FALSE;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        for (int i = 0; i < cpt; ++i)
         {
-            if ((event.motion.x < 260) && (event.motion.x > 230) && (event.motion.y < coord_y[i] + 30) && (event.motion.y > coord_y[i]))
+            currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons[i]);
+            if (currentlyInside != bouttons[i].mouseInside)
             {
-                dessiner_rectangle(rendu, 230, coord_y[i], 30, 30);
-                SDL_RenderDrawLine(rendu, 230, coord_y[i], 260, coord_y[i] + 30);
-                SDL_RenderDrawLine(rendu, 260, coord_y[i], 230, coord_y[i] + 30);
-                rendu_modifie = SDL_TRUE;
-                SDL_RenderPresent(rendu);
-                break;
+                bouttons[i].mouseInside = currentlyInside;
+                stateChanged = SDL_TRUE;
             }
+        }
+        if (stateChanged)
+        {
+            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+            if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+            cases.h = 30;
+            cases.w = 30;
+            for (int i = 0; i < cpt; i++)
+            {
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
+                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                    SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+            }
+            if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+            for (int i = 0; i < cpt; ++i)
+            {
+                if (bouttons[i].mouseInside)
+                {
+                    dessiner_rectangle(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2 - bouttons[i].x1, bouttons[i].y2 - bouttons[i].y1);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2, bouttons[i].y2);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x2, bouttons[i].y1, bouttons[i].x1, bouttons[i].y2);
+                }
+            }
+            SDL_RenderPresent(rendu);
         }
 
         while (SDL_PollEvent(&event))
@@ -5835,18 +6759,18 @@ void deriver_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT)
                 {
-                    if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                    if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                         sortir_tache = SDL_TRUE;
                     else
                     {
                         for (int i = 0; i < cpt; i++)
                         {
-                            if ((event.button.x < 260) && (event.button.x > 230) && (event.button.y < coord_y[i] + 30) && (event.button.y > coord_y[i]))
+                            if ((event.button.x < bouttons[i].x2) && (event.button.x > bouttons[i].x1) && (event.button.y < bouttons[i].y2) && (event.button.y > bouttons[i].y1))
                             {
                                 //-----------------------------------------------Derivation du polynome------------------------------------------------------
                                 Tete_Poly1 = derivee_poly(adr_maillon_ens(Tete_Ensemble, i + 1)->adr1);
                                 Tete_Poly2 = Tete_Poly1;
-                                page3 = IMG_Load("images/03.jpg");
+                                page3 = IMG_Load("assets/images/03.jpg");
                                 if (page3 == NULL)
                                     SDL_ExitWithError("Impossible de charger l'image");
                                 position_texte.x = 80;
@@ -5927,62 +6851,105 @@ void deriver_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                     SDL_ExitWithError("Impossible de créer la texture");
                                 if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                     SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+
+                                Rectangle bouttons_oui_non[] = {
+                                    {3, 600, 630, position_texte.y, position_texte.y + 30, SDL_FALSE},
+                                    {3, 800, 830, position_texte.y, position_texte.y + 30, SDL_FALSE}};
+                                if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+                                    SDL_ExitWithError("Impossible de changer la couleuur du rendu");
+                                cases.x = bouttons_oui_non[0].x1;
+                                cases.y = bouttons_oui_non[0].y1;
+                                cases.h = 30;
+                                cases.w = 30;
+                                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                    SDL_ExitWithError("Impossible de dessiner les cases");
+                                cases.x = bouttons_oui_non[1].x1;
+                                cases.y = bouttons_oui_non[1].y1;
+                                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                    SDL_ExitWithError("Impossible de dessiner les cases");
+                                if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                    SDL_ExitWithError("Impossible de changer la couleur au Rendu");
                                 SDL_RenderPresent(rendu);
 
                                 SDL_bool oui_non = SDL_TRUE;
-                                rendu_modifie = SDL_TRUE;
                                 while (oui_non)
                                 {
                                     temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-                                    if (rendu_modifie)
+                                    // Dessiner une bordure rouge si le boutton de retour est survolé
+                                    int mouseX, mouseY;
+                                    SDL_GetMouseState(&mouseX, &mouseY);
+                                    SDL_bool stateChanged = SDL_FALSE;
+                                    SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+                                    if (currentlyInside != boutton_retour.mouseInside)
+                                    {
+                                        boutton_retour.mouseInside = currentlyInside;
+                                        stateChanged = SDL_TRUE;
+                                    }
+                                    if (stateChanged)
                                     {
                                         if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                             SDL_ExitWithError("Impossible de copier la texture dans le rendu");
                                         if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
-                                            SDL_ExitWithError("Impossible de changer la couleuur du rendu");
-                                        cases.x = 600;
-                                        cases.y = position_texte.y;
+                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
                                         cases.h = 30;
                                         cases.w = 30;
-                                        if (SDL_RenderFillRect(rendu, &cases) != 0)
-                                            SDL_ExitWithError("Impossible de dessiner les cases");
-                                        cases.x = 800;
-                                        cases.y = position_texte.y;
-                                        cases.h = 30;
-                                        cases.w = 30;
-                                        if (SDL_RenderFillRect(rendu, &cases) != 0)
-                                            SDL_ExitWithError("Impossible de dessiner les cases");
+                                        for (int i = 0; i < 2; i++)
+                                        {
+                                            cases.x = bouttons_oui_non[i].x1;
+                                            cases.y = bouttons_oui_non[i].y1;
+                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+                                        }
                                         if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                                             SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-                                        rendu_modifie = SDL_FALSE;
+                                        if (boutton_retour.mouseInside)
+                                        {
+                                            dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+                                        }
                                         SDL_RenderPresent(rendu);
                                     }
 
-                                    if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
+                                    // Dessiner une bordure rouge si un des bouttons (oui et non) est survolé
+                                    stateChanged = SDL_FALSE;
+                                    SDL_GetMouseState(&mouseX, &mouseY);
+                                    for (int i = 0; i < 2; i++)
                                     {
-                                        dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-                                        rendu_modifie = SDL_TRUE;
-                                        SDL_RenderPresent(rendu);
+                                        currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons_oui_non[i]);
+                                        if (currentlyInside != bouttons_oui_non[i].mouseInside)
+                                        {
+                                            bouttons_oui_non[i].mouseInside = currentlyInside;
+                                            stateChanged = SDL_TRUE;
+                                        }
                                     }
-                                    else
+                                    if (stateChanged)
                                     {
-                                        if ((event.motion.x < 630) && (event.motion.x > 600) && (event.motion.y < position_texte.y + 30) && (event.motion.y > position_texte.y))
+                                        if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                                            SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+                                        if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                                        cases.h = 30;
+                                        cases.w = 30;
+                                        for (int i = 0; i < 2; i++)
                                         {
-                                            dessiner_rectangle(rendu, 600, position_texte.y, 30, 30);
-                                            SDL_RenderDrawLine(rendu, 600, position_texte.y, 630, position_texte.y + 30);
-                                            SDL_RenderDrawLine(rendu, 630, position_texte.y, 600, position_texte.y + 30);
-                                            rendu_modifie = SDL_TRUE;
-                                            SDL_RenderPresent(rendu);
+                                            cases.x = bouttons_oui_non[i].x1;
+                                            cases.y = bouttons_oui_non[i].y1;
+                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                SDL_ExitWithError("Impossible de dessiner les cases à cocher");
                                         }
-                                        if ((event.motion.x < 830) && (event.motion.x > 800) && (event.motion.y < position_texte.y + 30) && (event.motion.y > position_texte.y))
+                                        if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+                                        for (int i = 0; i < 2; ++i)
                                         {
-                                            dessiner_rectangle(rendu, 800, position_texte.y, 30, 30);
-                                            SDL_RenderDrawLine(rendu, 800, position_texte.y, 830, position_texte.y + 30);
-                                            SDL_RenderDrawLine(rendu, 830, position_texte.y, 800, position_texte.y + 30);
-                                            rendu_modifie = SDL_TRUE;
-                                            SDL_RenderPresent(rendu);
+                                            if (bouttons_oui_non[i].mouseInside)
+                                            {
+                                                dessiner_rectangle(rendu, bouttons_oui_non[i].x1, bouttons_oui_non[i].y1, 30, 30);
+                                                SDL_RenderDrawLine(rendu, bouttons_oui_non[i].x2, bouttons_oui_non[i].y1, bouttons_oui_non[i].x1, bouttons_oui_non[i].y2);
+                                                SDL_RenderDrawLine(rendu, bouttons_oui_non[i].x1, bouttons_oui_non[i].y1, bouttons_oui_non[i].x2, bouttons_oui_non[i].y2);
+                                            }
                                         }
+                                        SDL_RenderPresent(rendu);
                                     }
 
                                     while (SDL_PollEvent(&event))
@@ -5992,16 +6959,16 @@ void deriver_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                         case SDL_MOUSEBUTTONDOWN:
                                             if (event.button.button == SDL_BUTTON_LEFT)
                                             {
-                                                if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                                                if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                                                     oui_non = SDL_FALSE;
                                                 else
                                                 {
-                                                    if ((event.button.x < 630) && (event.button.x > 600) && (event.button.y < position_texte.y + 30) && (event.button.y > position_texte.y))
+                                                    if ((event.button.x < bouttons_oui_non[0].x2) && (event.button.x > bouttons_oui_non[0].x1) && (event.button.y < bouttons_oui_non[0].y2) && (event.button.y > bouttons_oui_non[0].y1))
                                                     {
                                                         ajout_poly_ensemble(&Tete_Ensemble, Tete_Poly2);
                                                         oui_non = SDL_FALSE;
                                                     }
-                                                    if ((event.button.x < 830) && (event.button.x > 800) && (event.button.y < position_texte.y + 30) && (event.button.y > position_texte.y))
+                                                    if ((event.button.x < bouttons_oui_non[1].x2) && (event.button.x > bouttons_oui_non[1].x1) && (event.button.y < bouttons_oui_non[1].y2) && (event.button.y > bouttons_oui_non[1].y1))
                                                     {
                                                         oui_non = SDL_FALSE;
                                                     }
@@ -6039,6 +7006,7 @@ void deriver_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         limiter_FPS(temps_limite); // -----> Limiter la vitesse du programme
     }
 
+    free(bouttons);
     TTF_CloseFont(police2);
     TTF_CloseFont(police3);
     TTF_CloseFont(police4);
@@ -6056,31 +7024,31 @@ void integrer_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
     LLC_Poly *Poly = Tete_Ensemble;
     Monome *Tete_Poly1 = NULL, *Tete_Poly2 = NULL;
     char chaine_char[30] = "";
-    int coord_y[20] = {0};
-
     SDL_Texture *texture_p3 = NULL;
     SDL_Surface *page3 = NULL, *texte = NULL;
     TTF_Font *police2 = NULL, *police3 = NULL, *police4 = NULL;
     SDL_Rect position_textures, position_texte, cases;
     SDL_Event event;
-    SDL_bool sortir_tache = SDL_FALSE, rendu_modifie = SDL_TRUE;
+    SDL_bool sortir_tache = SDL_FALSE;
     unsigned int temps_limite = 0, cpt = 0;
+    Rectangle boutton_retour = {3, 100, 260, 632, 687, SDL_FALSE};
+    Rectangle *bouttons = (Rectangle *)malloc(20 * sizeof(Rectangle));
 
-    page3 = IMG_Load("images/03.jpg");
+    page3 = IMG_Load("assets/images/03.jpg");
     if (page3 == NULL)
         SDL_ExitWithError("Impossible de charger l'image");
 
-    police2 = TTF_OpenFont("polices/times.ttf", 40);
+    police2 = TTF_OpenFont("assets/polices/times.ttf", 40);
     if (police2 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police2, TTF_STYLE_BOLD | TTF_STYLE_ITALIC | TTF_STYLE_UNDERLINE);
 
-    police3 = TTF_OpenFont("polices/times.ttf", 25);
+    police3 = TTF_OpenFont("assets/polices/times.ttf", 25);
     if (police3 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
 
-    police4 = TTF_OpenFont("polices/times.ttf", 15);
+    police4 = TTF_OpenFont("assets/polices/times.ttf", 15);
     if (police4 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -6104,7 +7072,12 @@ void integrer_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         Tete_Poly1 = Poly->adr1;
         position_texte.x = 280;
         position_texte.y += 50;
-        coord_y[cpt] = position_texte.y;
+        bouttons[cpt].page = 3;
+        bouttons[cpt].x1 = 230;
+        bouttons[cpt].x2 = 260;
+        bouttons[cpt].y1 = 150 + 50 * cpt;
+        bouttons[cpt].y2 = 180 + 50 * cpt;
+        bouttons[cpt].mouseInside = SDL_FALSE;
         cpt++;
         sprintf(chaine_char, "P%d = ", cpt);
         texte = TTF_RenderText_Blended(police3, chaine_char, NOIR);
@@ -6166,54 +7139,101 @@ void integrer_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         SDL_ExitWithError("Impossible de charger la texture (dans la mémoire)");
     if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-    SDL_RenderPresent(rendu);
 
+    if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    cases.h = 30;
+    cases.w = 30;
+    for (int i = 0; i < cpt; i++)
+    {
+        cases.x = bouttons[i].x1;
+        cases.y = bouttons[i].y1;
+        if (SDL_RenderFillRect(rendu, &cases) != 0)
+            SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+    }
     if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
         SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    SDL_RenderPresent(rendu);
 
     while (!sortir_tache)
     {
         temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-        if (rendu_modifie)
+        // Dessiner une bordure rouge si le boutton de retour est survolé
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_bool stateChanged = SDL_FALSE;
+        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+        if (currentlyInside != boutton_retour.mouseInside)
+        {
+            boutton_retour.mouseInside = currentlyInside;
+            stateChanged = SDL_TRUE;
+        }
+        if (stateChanged)
         {
             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                 SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-
             if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-            cases.x = 230;
             cases.h = 30;
             cases.w = 30;
             for (int i = 0; i < cpt; i++)
             {
-                cases.y = coord_y[i];
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
                 if (SDL_RenderFillRect(rendu, &cases) != 0)
                     SDL_ExitWithError("Impossible de dessiner les cases à cocher");
             }
-            rendu_modifie = SDL_FALSE;
-            SDL_RenderPresent(rendu);
             if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-        }
 
-        if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
-        {
-            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-            rendu_modifie = SDL_TRUE;
+            if (boutton_retour.mouseInside)
+            {
+                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+            }
             SDL_RenderPresent(rendu);
         }
-        for (int i = 0; i < cpt; i++)
+
+        // Dessiner une bordure et une croix si les caches à cocher sont survolées
+        stateChanged = SDL_FALSE;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        for (int i = 0; i < cpt; ++i)
         {
-            if ((event.motion.x < 260) && (event.motion.x > 230) && (event.motion.y < coord_y[i] + 30) && (event.motion.y > coord_y[i]))
+            currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons[i]);
+            if (currentlyInside != bouttons[i].mouseInside)
             {
-                dessiner_rectangle(rendu, 230, coord_y[i], 30, 30);
-                SDL_RenderDrawLine(rendu, 230, coord_y[i], 260, coord_y[i] + 30);
-                SDL_RenderDrawLine(rendu, 260, coord_y[i], 230, coord_y[i] + 30);
-                rendu_modifie = SDL_TRUE;
-                SDL_RenderPresent(rendu);
-                break;
+                bouttons[i].mouseInside = currentlyInside;
+                stateChanged = SDL_TRUE;
             }
+        }
+        if (stateChanged)
+        {
+            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+            if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+            cases.h = 30;
+            cases.w = 30;
+            for (int i = 0; i < cpt; i++)
+            {
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
+                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                    SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+            }
+            if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+            for (int i = 0; i < cpt; ++i)
+            {
+                if (bouttons[i].mouseInside)
+                {
+                    dessiner_rectangle(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2 - bouttons[i].x1, bouttons[i].y2 - bouttons[i].y1);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2, bouttons[i].y2);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x2, bouttons[i].y1, bouttons[i].x1, bouttons[i].y2);
+                }
+            }
+            SDL_RenderPresent(rendu);
         }
 
         while (SDL_PollEvent(&event))
@@ -6223,18 +7243,18 @@ void integrer_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT)
                 {
-                    if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                    if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                         sortir_tache = SDL_TRUE;
                     else
                     {
                         for (int i = 0; i < cpt; i++)
                         {
-                            if ((event.button.x < 260) && (event.button.x > 230) && (event.button.y < coord_y[i] + 30) && (event.button.y > coord_y[i]))
+                            if ((event.button.x < bouttons[i].x2) && (event.button.x > bouttons[i].x1) && (event.button.y < bouttons[i].y2) && (event.button.y > bouttons[i].y1))
                             {
                                 //-----------------------------------------------Intregration du polynome------------------------------------------------------
                                 Tete_Poly1 = primitive_poly(adr_maillon_ens(Tete_Ensemble, i + 1)->adr1);
                                 Tete_Poly2 = Tete_Poly1;
-                                page3 = IMG_Load("images/03.jpg");
+                                page3 = IMG_Load("assets/images/03.jpg");
                                 if (page3 == NULL)
                                     SDL_ExitWithError("Impossible de charger l'image");
                                 position_texte.x = 80;
@@ -6302,62 +7322,105 @@ void integrer_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                     SDL_ExitWithError("Impossible de créer la texture");
                                 if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                     SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+
+                                Rectangle bouttons_oui_non[] = {
+                                    {3, 600, 630, position_texte.y, position_texte.y + 30, SDL_FALSE},
+                                    {3, 800, 830, position_texte.y, position_texte.y + 30, SDL_FALSE}};
+                                if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+                                    SDL_ExitWithError("Impossible de changer la couleuur du rendu");
+                                cases.x = bouttons_oui_non[0].x1;
+                                cases.y = bouttons_oui_non[0].y1;
+                                cases.h = 30;
+                                cases.w = 30;
+                                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                    SDL_ExitWithError("Impossible de dessiner les cases");
+                                cases.x = bouttons_oui_non[1].x1;
+                                cases.y = bouttons_oui_non[1].y1;
+                                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                    SDL_ExitWithError("Impossible de dessiner les cases");
+                                if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                    SDL_ExitWithError("Impossible de changer la couleur au Rendu");
                                 SDL_RenderPresent(rendu);
 
                                 SDL_bool oui_non = SDL_TRUE;
-                                rendu_modifie = SDL_TRUE;
                                 while (oui_non)
                                 {
                                     temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-                                    if (rendu_modifie)
+                                    // Dessiner une bordure rouge si le boutton de retour est survolé
+                                    int mouseX, mouseY;
+                                    SDL_GetMouseState(&mouseX, &mouseY);
+                                    SDL_bool stateChanged = SDL_FALSE;
+                                    SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+                                    if (currentlyInside != boutton_retour.mouseInside)
+                                    {
+                                        boutton_retour.mouseInside = currentlyInside;
+                                        stateChanged = SDL_TRUE;
+                                    }
+                                    if (stateChanged)
                                     {
                                         if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                             SDL_ExitWithError("Impossible de copier la texture dans le rendu");
                                         if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
-                                            SDL_ExitWithError("Impossible de changer la couleuur du rendu");
-                                        cases.x = 600;
-                                        cases.y = position_texte.y;
+                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
                                         cases.h = 30;
                                         cases.w = 30;
-                                        if (SDL_RenderFillRect(rendu, &cases) != 0)
-                                            SDL_ExitWithError("Impossible de dessiner les cases");
-                                        cases.x = 800;
-                                        cases.y = position_texte.y;
-                                        cases.h = 30;
-                                        cases.w = 30;
-                                        if (SDL_RenderFillRect(rendu, &cases) != 0)
-                                            SDL_ExitWithError("Impossible de dessiner les cases");
+                                        for (int i = 0; i < 2; i++)
+                                        {
+                                            cases.x = bouttons_oui_non[i].x1;
+                                            cases.y = bouttons_oui_non[i].y1;
+                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+                                        }
                                         if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                                             SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-                                        rendu_modifie = SDL_FALSE;
+                                        if (boutton_retour.mouseInside)
+                                        {
+                                            dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+                                        }
                                         SDL_RenderPresent(rendu);
                                     }
 
-                                    if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
+                                    // Dessiner une bordure rouge si un des bouttons (oui et non) est survolé
+                                    stateChanged = SDL_FALSE;
+                                    SDL_GetMouseState(&mouseX, &mouseY);
+                                    for (int i = 0; i < 2; i++)
                                     {
-                                        dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-                                        rendu_modifie = SDL_TRUE;
-                                        SDL_RenderPresent(rendu);
+                                        currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons_oui_non[i]);
+                                        if (currentlyInside != bouttons_oui_non[i].mouseInside)
+                                        {
+                                            bouttons_oui_non[i].mouseInside = currentlyInside;
+                                            stateChanged = SDL_TRUE;
+                                        }
                                     }
-                                    else
+                                    if (stateChanged)
                                     {
-                                        if ((event.motion.x < 630) && (event.motion.x > 600) && (event.motion.y < position_texte.y + 30) && (event.motion.y > position_texte.y))
+                                        if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                                            SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+                                        if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                                        cases.h = 30;
+                                        cases.w = 30;
+                                        for (int i = 0; i < 2; i++)
                                         {
-                                            dessiner_rectangle(rendu, 600, position_texte.y, 30, 30);
-                                            SDL_RenderDrawLine(rendu, 600, position_texte.y, 630, position_texte.y + 30);
-                                            SDL_RenderDrawLine(rendu, 630, position_texte.y, 600, position_texte.y + 30);
-                                            rendu_modifie = SDL_TRUE;
-                                            SDL_RenderPresent(rendu);
+                                            cases.x = bouttons_oui_non[i].x1;
+                                            cases.y = bouttons_oui_non[i].y1;
+                                            if (SDL_RenderFillRect(rendu, &cases) != 0)
+                                                SDL_ExitWithError("Impossible de dessiner les cases à cocher");
                                         }
-                                        if ((event.motion.x < 830) && (event.motion.x > 800) && (event.motion.y < position_texte.y + 30) && (event.motion.y > position_texte.y))
+                                        if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+                                        for (int i = 0; i < 2; ++i)
                                         {
-                                            dessiner_rectangle(rendu, 800, position_texte.y, 30, 30);
-                                            SDL_RenderDrawLine(rendu, 800, position_texte.y, 830, position_texte.y + 30);
-                                            SDL_RenderDrawLine(rendu, 830, position_texte.y, 800, position_texte.y + 30);
-                                            rendu_modifie = SDL_TRUE;
-                                            SDL_RenderPresent(rendu);
+                                            if (bouttons_oui_non[i].mouseInside)
+                                            {
+                                                dessiner_rectangle(rendu, bouttons_oui_non[i].x1, bouttons_oui_non[i].y1, 30, 30);
+                                                SDL_RenderDrawLine(rendu, bouttons_oui_non[i].x2, bouttons_oui_non[i].y1, bouttons_oui_non[i].x1, bouttons_oui_non[i].y2);
+                                                SDL_RenderDrawLine(rendu, bouttons_oui_non[i].x1, bouttons_oui_non[i].y1, bouttons_oui_non[i].x2, bouttons_oui_non[i].y2);
+                                            }
                                         }
+                                        SDL_RenderPresent(rendu);
                                     }
 
                                     while (SDL_PollEvent(&event))
@@ -6367,16 +7430,16 @@ void integrer_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                         case SDL_MOUSEBUTTONDOWN:
                                             if (event.button.button == SDL_BUTTON_LEFT)
                                             {
-                                                if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                                                if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                                                     oui_non = SDL_FALSE;
                                                 else
                                                 {
-                                                    if ((event.button.x < 630) && (event.button.x > 600) && (event.button.y < position_texte.y + 30) && (event.button.y > position_texte.y))
+                                                    if ((event.button.x < bouttons_oui_non[0].x2) && (event.button.x > bouttons_oui_non[0].x1) && (event.button.y < bouttons_oui_non[0].y2) && (event.button.y > bouttons_oui_non[0].y1))
                                                     {
                                                         ajout_poly_ensemble(&Tete_Ensemble, Tete_Poly2);
                                                         oui_non = SDL_FALSE;
                                                     }
-                                                    if ((event.button.x < 830) && (event.button.x > 800) && (event.button.y < position_texte.y + 30) && (event.button.y > position_texte.y))
+                                                    if ((event.button.x < bouttons_oui_non[1].x2) && (event.button.x > bouttons_oui_non[1].x1) && (event.button.y < bouttons_oui_non[1].y2) && (event.button.y > bouttons_oui_non[1].y1))
                                                     {
                                                         oui_non = SDL_FALSE;
                                                     }
@@ -6414,6 +7477,7 @@ void integrer_polynome_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         limiter_FPS(temps_limite); // -----> Limiter la vitesse du programme
     }
 
+    free(bouttons);
     TTF_CloseFont(police2);
     TTF_CloseFont(police3);
     TTF_CloseFont(police4);
@@ -6432,31 +7496,31 @@ void dessiner_courbe_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
     LLC_Poly *Poly = Tete_Ensemble;
     Monome *Tete_Poly1 = NULL, *Tete_Poly2 = NULL;
     char chaine_char[30] = "";
-    int coord_y[20] = {0};
     unsigned int temps_limite = 0, cpt = 0;
-
     SDL_Texture *texture_p3 = NULL;
     SDL_Surface *page3 = NULL, *texte = NULL;
     TTF_Font *police2 = NULL, *police3 = NULL, *police4 = NULL;
     SDL_Rect position_textures, position_texte, cases;
     SDL_Event event;
-    SDL_bool sortir_tache = SDL_FALSE, rendu_modifie = SDL_TRUE;
+    SDL_bool sortir_tache = SDL_FALSE;
+    Rectangle boutton_retour = {3, 100, 260, 632, 687, SDL_FALSE};
+    Rectangle *bouttons = (Rectangle *)malloc(20 * sizeof(Rectangle));
 
-    page3 = IMG_Load("images/03.jpg");
+    page3 = IMG_Load("assets/images/03.jpg");
     if (page3 == NULL)
         SDL_ExitWithError("Impossible de charger l'image");
 
-    police2 = TTF_OpenFont("polices/times.ttf", 40);
+    police2 = TTF_OpenFont("assets/polices/times.ttf", 40);
     if (police2 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police2, TTF_STYLE_BOLD | TTF_STYLE_ITALIC | TTF_STYLE_UNDERLINE);
 
-    police3 = TTF_OpenFont("polices/times.ttf", 25);
+    police3 = TTF_OpenFont("assets/polices/times.ttf", 25);
     if (police3 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
 
-    police4 = TTF_OpenFont("polices/times.ttf", 20);
+    police4 = TTF_OpenFont("assets/polices/times.ttf", 20);
     if (police4 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -6480,7 +7544,12 @@ void dessiner_courbe_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         Tete_Poly1 = Poly->adr1;
         position_texte.x = 280;
         position_texte.y += 50;
-        coord_y[cpt] = position_texte.y;
+        bouttons[cpt].page = 3;
+        bouttons[cpt].x1 = 230;
+        bouttons[cpt].x2 = 260;
+        bouttons[cpt].y1 = 150 + 50 * cpt;
+        bouttons[cpt].y2 = 180 + 50 * cpt;
+        bouttons[cpt].mouseInside = SDL_FALSE;
         cpt++;
         sprintf(chaine_char, "P%d = ", cpt);
         texte = TTF_RenderText_Blended(police3, chaine_char, NOIR);
@@ -6542,54 +7611,100 @@ void dessiner_courbe_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         SDL_ExitWithError("Impossible de charger la texture (dans la mémoire)");
     if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-    SDL_RenderPresent(rendu);
-
+    if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    cases.h = 30;
+    cases.w = 30;
+    for (int i = 0; i < cpt; i++)
+    {
+        cases.x = bouttons[i].x1;
+        cases.y = bouttons[i].y1;
+        if (SDL_RenderFillRect(rendu, &cases) != 0)
+            SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+    }
     if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
         SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    SDL_RenderPresent(rendu);
 
     while (!sortir_tache)
     {
         temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-        if (rendu_modifie)
+        // Dessiner une bordure rouge si le boutton de retour est survolé
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_bool stateChanged = SDL_FALSE;
+        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+        if (currentlyInside != boutton_retour.mouseInside)
+        {
+            boutton_retour.mouseInside = currentlyInside;
+            stateChanged = SDL_TRUE;
+        }
+        if (stateChanged)
         {
             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                 SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-
             if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-            cases.x = 230;
             cases.h = 30;
             cases.w = 30;
             for (int i = 0; i < cpt; i++)
             {
-                cases.y = coord_y[i];
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
                 if (SDL_RenderFillRect(rendu, &cases) != 0)
                     SDL_ExitWithError("Impossible de dessiner les cases à cocher");
             }
-            rendu_modifie = SDL_FALSE;
-            SDL_RenderPresent(rendu);
             if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-        }
 
-        if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
-        {
-            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-            rendu_modifie = SDL_TRUE;
+            if (boutton_retour.mouseInside)
+            {
+                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+            }
             SDL_RenderPresent(rendu);
         }
-        for (int i = 0; i < cpt; i++)
+
+        // Dessiner une bordure et une croix si les caches à cocher sont survolées
+        stateChanged = SDL_FALSE;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        for (int i = 0; i < cpt; ++i)
         {
-            if ((event.motion.x < 260) && (event.motion.x > 230) && (event.motion.y < coord_y[i] + 30) && (event.motion.y > coord_y[i]))
+            currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons[i]);
+            if (currentlyInside != bouttons[i].mouseInside)
             {
-                dessiner_rectangle(rendu, 230, coord_y[i], 30, 30);
-                SDL_RenderDrawLine(rendu, 230, coord_y[i], 260, coord_y[i] + 30);
-                SDL_RenderDrawLine(rendu, 260, coord_y[i], 230, coord_y[i] + 30);
-                rendu_modifie = SDL_TRUE;
-                SDL_RenderPresent(rendu);
-                break;
+                bouttons[i].mouseInside = currentlyInside;
+                stateChanged = SDL_TRUE;
             }
+        }
+        if (stateChanged)
+        {
+            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+            if (SDL_SetRenderDrawColor(rendu, 239, 228, 176, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+            cases.h = 30;
+            cases.w = 30;
+            for (int i = 0; i < cpt; i++)
+            {
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
+                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                    SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+            }
+            if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+            for (int i = 0; i < cpt; ++i)
+            {
+                if (bouttons[i].mouseInside)
+                {
+                    dessiner_rectangle(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2 - bouttons[i].x1, bouttons[i].y2 - bouttons[i].y1);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2, bouttons[i].y2);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x2, bouttons[i].y1, bouttons[i].x1, bouttons[i].y2);
+                }
+            }
+            SDL_RenderPresent(rendu);
         }
 
         while (SDL_PollEvent(&event))
@@ -6599,18 +7714,18 @@ void dessiner_courbe_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT)
                 {
-                    if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                    if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                         sortir_tache = SDL_TRUE;
                     else
                     {
                         for (int i = 0; i < cpt; i++)
                         {
-                            if ((event.button.x < 260) && (event.button.x > 230) && (event.button.y < coord_y[i] + 30) && (event.button.y > coord_y[i]))
+                            if ((event.button.x < bouttons[i].x2) && (event.button.x > bouttons[i].x1) && (event.button.y < bouttons[i].y2) && (event.button.y > bouttons[i].y1))
                             {
                                 //------------------------------------------------Traçage de la Courbe--------------------------------------------------
                                 Tete_Poly1 = adr_maillon_ens(Tete_Ensemble, i + 1)->adr1;
 
-                                page3 = IMG_Load("images/courbe2.jpg");
+                                page3 = IMG_Load("assets/images/courbe2.jpg");
                                 if (page3 == NULL)
                                     SDL_ExitWithError("Impossible de charge la page3");
 
@@ -6634,9 +7749,23 @@ void dessiner_courbe_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                 position_textures.x = 0;
                                 position_textures.y = 0;
                                 texture_p3 = SDL_CreateTextureFromSurface(rendu, page3);
-                                if (texture_p3 == NULL)     
+                                if (texture_p3 == NULL)
                                     SDL_ExitWithError("Impossible de créer la texture");
                                 if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                                    SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+
+                                SDL_Texture *render_target_texture = SDL_CreateTexture(
+                                    rendu,
+                                    SDL_PIXELFORMAT_RGBA8888,
+                                    SDL_TEXTUREACCESS_TARGET,
+                                    WINDOW_WIDTH1,
+                                    WINDOW_HEIGHT1);
+                                if (render_target_texture == NULL)
+                                    SDL_ExitWithError("Impossible de créer la texture cible");
+
+                                if (SDL_SetRenderTarget(rendu, render_target_texture) != 0)
+                                    printf("Failed to set render target: %s\n", SDL_GetError());
+                                if (SDL_RenderCopy(rendu, texture_p3, NULL, NULL) != 0)
                                     SDL_ExitWithError("Impossible de copier la texture dans le rendu");
 
                                 if (SDL_SetRenderDrawColor(rendu, 30, 153, 67, SDL_ALPHA_OPAQUE) != 0)
@@ -6653,8 +7782,8 @@ void dessiner_courbe_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                 if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                                     SDL_ExitWithError("Impossible de changer la couleur au Rendu");
 
-                                float x, y = 0;      //Les coordonnées de chaque point en (cm)
-                                int Xp, Yp, cpt = 0; //Les coordonnées convertis en pixels
+                                float x, y = 0;      // Les coordonnées de chaque point en (cm)
+                                int Xp, Yp, cpt = 0; // Les coordonnées convertis en pixels
                                 for (x = -15; x <= 15; x += 0.001)
                                 {
                                     y = eval_poly(Tete_Poly1, x);
@@ -6663,49 +7792,35 @@ void dessiner_courbe_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                     if ((Yp < 700) && (Yp > 100))
                                         dessiner_point(rendu, Xp, Yp);
                                 }
+
+                                SDL_SetRenderTarget(rendu, NULL);
+                                if (SDL_RenderCopy(rendu, render_target_texture, NULL, &position_textures) != 0)
+                                    SDL_ExitWithError("Impossible de copier la texture dans le rendu");
                                 SDL_RenderPresent(rendu);
- 
+
                                 SDL_bool sortir_tache2 = SDL_FALSE;
-                                rendu_modifie = SDL_TRUE;
                                 while (!sortir_tache2)
                                 {
                                     temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-                                    if (rendu_modifie)
+                                    // Dessiner une bordure rouge si le boutton de retour est survolé
+                                    int mouseX, mouseY;
+                                    SDL_GetMouseState(&mouseX, &mouseY);
+                                    SDL_bool stateChanged = SDL_FALSE;
+                                    SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+                                    if (currentlyInside != boutton_retour.mouseInside)
                                     {
-                                        if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
-                                            SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-                                        if (SDL_SetRenderDrawColor(rendu, 30, 153, 67, SDL_ALPHA_OPAQUE) != 0)
-                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-                                        dessiner_rectangle(rendu, 330, 100, 900, 600);
-                                        dessiner_ligne(rendu, 780, 100, 780, 700);
-                                        dessiner_ligne(rendu, 330, 400, 1230, 400);
-                                        SDL_RenderDrawLine(rendu, 480, 100, 480, 700);
-                                        SDL_RenderDrawLine(rendu, 630, 100, 630, 700);
-                                        SDL_RenderDrawLine(rendu, 930, 100, 930, 700);
-                                        SDL_RenderDrawLine(rendu, 1080, 100, 1080, 700);
-                                        SDL_RenderDrawLine(rendu, 330, 250, 1230, 250);
-                                        SDL_RenderDrawLine(rendu, 330, 550, 1230, 550);
-                                        if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
-                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-                                        for (x = -15; x <= 15; x += 0.001)
-                                        {
-                                            y = eval_poly(Tete_Poly1, x);
-                                            Xp = 30 * x + 780;
-                                            Yp = -30 * y + 400;
-                                            if ((Yp < 700) && (Yp > 100))
-                                                dessiner_point(rendu, Xp, Yp);
-                                        }
-                                        rendu_modifie = SDL_FALSE;
-                                        SDL_RenderPresent(rendu);
+                                        boutton_retour.mouseInside = currentlyInside;
+                                        stateChanged = SDL_TRUE;
                                     }
-
-                                    if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
+                                    if (stateChanged)
                                     {
-                                        if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
-                                            SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-                                        dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-                                        rendu_modifie = SDL_TRUE;
+                                        if (SDL_RenderCopy(rendu, render_target_texture, NULL, &position_textures) != 0)
+                                            SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+                                        if (boutton_retour.mouseInside)
+                                        {
+                                            dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+                                        }
                                         SDL_RenderPresent(rendu);
                                     }
 
@@ -6715,7 +7830,7 @@ void dessiner_courbe_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
                                         {
                                         case SDL_MOUSEBUTTONDOWN:
                                             if (event.button.button == SDL_BUTTON_LEFT)
-                                                if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                                                if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                                                     sortir_tache2 = SDL_TRUE;
                                             break;
 
@@ -6748,6 +7863,7 @@ void dessiner_courbe_2D(SDL_Renderer *rendu, LLC_Poly *Tete_Ensemble)
         }
         limiter_FPS(temps_limite); // -----> Limiter la vitesse du programme
     }
+    free(bouttons);
     TTF_CloseFont(police2);
     TTF_CloseFont(police3);
     TTF_CloseFont(police4);
@@ -6767,29 +7883,29 @@ void application_CRC_2D(SDL_Renderer *rendu)
     float puiss = 0;
     char phrase[100] = "";
     unsigned int temps_limite = 0;
-
     SDL_Texture *texture_p3 = NULL;
     SDL_Surface *page3 = NULL, *texte = NULL;
     TTF_Font *police2 = NULL, *police3 = NULL, *police4 = NULL;
     SDL_Rect position_textures, position_texte, cases;
     SDL_Event event;
-    SDL_bool sortir_tache = SDL_FALSE, rendu_modifie = SDL_TRUE;
+    SDL_bool sortir_tache = SDL_FALSE;
+    Rectangle boutton_retour = {3, 100, 260, 632, 687, SDL_FALSE};
 
-    page3 = IMG_Load("images/03.jpg");
+    page3 = IMG_Load("assets/images/03.jpg");
     if (page3 == NULL)
         SDL_ExitWithError("Impossible de charger l'image");
 
-    police2 = TTF_OpenFont("polices/times.ttf", 40);
+    police2 = TTF_OpenFont("assets/polices/times.ttf", 40);
     if (police2 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police2, TTF_STYLE_BOLD | TTF_STYLE_ITALIC | TTF_STYLE_UNDERLINE);
 
-    police3 = TTF_OpenFont("polices/times.ttf", 25);
+    police3 = TTF_OpenFont("assets/polices/times.ttf", 25);
     if (police3 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
 
-    police4 = TTF_OpenFont("polices/times.ttf", 15);
+    police4 = TTF_OpenFont("assets/polices/times.ttf", 15);
     if (police4 == NULL)
         SDL_ExitWithError("Impossible de charger la police Times New Romain");
     TTF_SetFontStyle(police3, TTF_STYLE_NORMAL);
@@ -6818,57 +7934,103 @@ void application_CRC_2D(SDL_Renderer *rendu)
         SDL_ExitWithError("Impossible de charger la texture (dans la mémoire)");
     if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-    SDL_RenderPresent(rendu);
 
+    Rectangle bouttons[] = {
+        {3, 350, 380, 250, 280, SDL_FALSE},
+        {3, 350, 380, 400, 430, SDL_FALSE}};
+    if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    cases.x = bouttons[0].x1;
+    cases.y = bouttons[0].y1;
+    cases.h = 30;
+    cases.w = 30;
+    if (SDL_RenderFillRect(rendu, &cases) != 0)
+        SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+    cases.y = bouttons[1].y1;
+    if (SDL_RenderFillRect(rendu, &cases) != 0)
+        SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+    SDL_RenderPresent(rendu);
     if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
         SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+    SDL_RenderPresent(rendu);
 
     while (!sortir_tache)
     {
         temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-        if (rendu_modifie)
+        // Dessiner une bordure rouge si le boutton de retour est survolé
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_bool stateChanged = SDL_FALSE;
+        SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+        if (currentlyInside != boutton_retour.mouseInside)
+        {
+            boutton_retour.mouseInside = currentlyInside;
+            stateChanged = SDL_TRUE;
+        }
+        if (stateChanged)
         {
             if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                 SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-
             if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-            cases.x = 350;
             cases.h = 30;
             cases.w = 30;
-            cases.y = 250;
-            if (SDL_RenderFillRect(rendu, &cases) != 0)
-                SDL_ExitWithError("Impossible de dessiner les cases à cocher");
-            cases.y = 400;
-            if (SDL_RenderFillRect(rendu, &cases) != 0)
-                SDL_ExitWithError("Impossible de dessiner les cases à cocher");
-            rendu_modifie = SDL_FALSE;
-            SDL_RenderPresent(rendu);
+            for (int i = 0; i < 2; i++)
+            {
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
+                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                    SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+            }
             if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
                 SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+            if (boutton_retour.mouseInside)
+            {
+                dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+            }
+            SDL_RenderPresent(rendu);
         }
 
-        if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
+        // Dessiner une bordure rouge si un des bouttons (oui et non) est survolé
+        stateChanged = SDL_FALSE;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        for (int i = 0; i < 2; i++)
         {
-            dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-            rendu_modifie = SDL_TRUE;
-            SDL_RenderPresent(rendu);
+            currentlyInside = isMouseInsideRect(mouseX, mouseY, bouttons[i]);
+            if (currentlyInside != bouttons[i].mouseInside)
+            {
+                bouttons[i].mouseInside = currentlyInside;
+                stateChanged = SDL_TRUE;
+            }
         }
-        if ((event.motion.x < 380) && (event.motion.x > 350) && (event.motion.y < 280) && (event.motion.y > 250))
+        if (stateChanged)
         {
-            dessiner_rectangle(rendu, 350, 250, 30, 30);
-            SDL_RenderDrawLine(rendu, 350, 250, 380, 280);
-            SDL_RenderDrawLine(rendu, 380, 250, 350, 280);
-            rendu_modifie = SDL_TRUE;
-            SDL_RenderPresent(rendu);
-        }
-        if ((event.motion.x < 380) && (event.motion.x > 350) && (event.motion.y < 430) && (event.motion.y > 400))
-        {
-            dessiner_rectangle(rendu, 350, 400, 30, 30);
-            SDL_RenderDrawLine(rendu, 350, 400, 380, 430);
-            SDL_RenderDrawLine(rendu, 380, 400, 350, 430);
-            rendu_modifie = SDL_TRUE;
+            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+            if (SDL_SetRenderDrawColor(rendu, 255, 255, 255, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+            cases.h = 30;
+            cases.w = 30;
+            for (int i = 0; i < 2; i++)
+            {
+                cases.x = bouttons[i].x1;
+                cases.y = bouttons[i].y1;
+                if (SDL_RenderFillRect(rendu, &cases) != 0)
+                    SDL_ExitWithError("Impossible de dessiner les cases à cocher");
+            }
+            if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+
+            for (int i = 0; i < 2; ++i)
+            {
+                if (bouttons[i].mouseInside)
+                {
+                    dessiner_rectangle(rendu, bouttons[i].x1, bouttons[i].y1, 30, 30);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x2, bouttons[i].y1, bouttons[i].x1, bouttons[i].y2);
+                    SDL_RenderDrawLine(rendu, bouttons[i].x1, bouttons[i].y1, bouttons[i].x2, bouttons[i].y2);
+                }
+            }
             SDL_RenderPresent(rendu);
         }
 
@@ -6879,14 +8041,14 @@ void application_CRC_2D(SDL_Renderer *rendu)
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT)
                 {
-                    if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                    if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                         sortir_tache = SDL_TRUE;
                     else
                     {
-                        if ((event.button.x < 380) && (event.button.x > 350) && (event.button.y < 280) && (event.button.y > 250))
+                        if ((event.button.x < bouttons[0].x2) && (event.button.x > bouttons[0].x1) && (event.button.y < bouttons[0].y2) && (event.button.y > bouttons[0].y1))
                         {
                             //-----------------------------------------------Code CRC------------------------------------------------------
-                            page3 = IMG_Load("images/03.jpg");
+                            page3 = IMG_Load("assets/images/03.jpg");
                             if (page3 == NULL)
                                 SDL_ExitWithError("Impossible de charger l'image");
 
@@ -6959,30 +8121,39 @@ void application_CRC_2D(SDL_Renderer *rendu)
                             }
 
                             texture_p3 = SDL_CreateTextureFromSurface(rendu, page3);
+                            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+                            if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                            SDL_RenderPresent(rendu);
 
                             SDL_bool oui_non = SDL_TRUE;
-                            rendu_modifie = SDL_TRUE;
                             while (oui_non)
                             {
                                 temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-                                if (rendu_modifie)
+                                // Dessiner une bordure rouge si le boutton de retour est survolé
+                                int mouseX, mouseY;
+                                SDL_GetMouseState(&mouseX, &mouseY);
+                                SDL_bool stateChanged = SDL_FALSE;
+                                SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+                                if (currentlyInside != boutton_retour.mouseInside)
+                                {
+                                    boutton_retour.mouseInside = currentlyInside;
+                                    stateChanged = SDL_TRUE;
+                                }
+                                if (stateChanged)
                                 {
                                     if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-                                    if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
-                                        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-                                    rendu_modifie = SDL_FALSE;
+
+                                    if (boutton_retour.mouseInside)
+                                    {
+                                        dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+                                    }
                                     SDL_RenderPresent(rendu);
                                 }
 
-                                if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
-                                {
-                                    dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-                                    rendu_modifie = SDL_TRUE;
-                                    SDL_RenderPresent(rendu);
-                                }
-                                
                                 while (SDL_PollEvent(&event))
                                 {
                                     switch (event.type)
@@ -6990,7 +8161,7 @@ void application_CRC_2D(SDL_Renderer *rendu)
                                     case SDL_MOUSEBUTTONDOWN:
                                         if (event.button.button == SDL_BUTTON_LEFT)
                                         {
-                                            if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                                            if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                                                 oui_non = SDL_FALSE;
                                         }
                                         continue;
@@ -7008,10 +8179,10 @@ void application_CRC_2D(SDL_Renderer *rendu)
                             sortir_tache = SDL_TRUE;
                             break;
                         }
-                        if ((event.button.x < 380) && (event.button.x > 350) && (event.button.y < 430) && (event.button.y > 400))
+                        if ((event.button.x < bouttons[1].x2) && (event.button.x > bouttons[1].x1) && (event.button.y < bouttons[1].y2) && (event.button.y > bouttons[1].y1))
                         {
                             //-----------------------------------------------Verification du message------------------------------------------------------
-                            page3 = IMG_Load("images/03.jpg");
+                            page3 = IMG_Load("assets/images/03.jpg");
                             if (page3 == NULL)
                                 SDL_ExitWithError("Impossible de charger l'image");
 
@@ -7068,31 +8239,39 @@ void application_CRC_2D(SDL_Renderer *rendu)
                                 else
                                     texte = TTF_RenderText_Blended(police2, "Y a une erreur !", BLEU);
                                 SDL_BlitSurface(texte, NULL, page3, &position_texte);
-
                             }
 
                             texture_p3 = SDL_CreateTextureFromSurface(rendu, page3);
+                            if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
+                                SDL_ExitWithError("Impossible de copier la texture dans le rendu");
+                            if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
+                                SDL_ExitWithError("Impossible de changer la couleur au Rendu");
+                            SDL_RenderPresent(rendu);
 
                             SDL_bool oui_non = SDL_TRUE;
-                            rendu_modifie = SDL_TRUE;
                             while (oui_non)
                             {
                                 temps_limite = SDL_GetTicks() + FPS_LIMIT; // -----> Limiter la vitesse du programme
 
-                                if (rendu_modifie)
+                                // Dessiner une bordure rouge si le boutton de retour est survolé
+                                int mouseX, mouseY;
+                                SDL_GetMouseState(&mouseX, &mouseY);
+                                SDL_bool stateChanged = SDL_FALSE;
+                                SDL_bool currentlyInside = isMouseInsideRect(mouseX, mouseY, boutton_retour);
+                                if (currentlyInside != boutton_retour.mouseInside)
+                                {
+                                    boutton_retour.mouseInside = currentlyInside;
+                                    stateChanged = SDL_TRUE;
+                                }
+                                if (stateChanged)
                                 {
                                     if (SDL_RenderCopy(rendu, texture_p3, NULL, &position_textures) != 0)
                                         SDL_ExitWithError("Impossible de copier la texture dans le rendu");
-                                    if (SDL_SetRenderDrawColor(rendu, 237, 28, 36, SDL_ALPHA_OPAQUE) != 0)
-                                        SDL_ExitWithError("Impossible de changer la couleur au Rendu");
-                                    rendu_modifie = SDL_FALSE;
-                                    SDL_RenderPresent(rendu);
-                                }
 
-                                if ((event.motion.x < 260) && (event.motion.x > 100) && (event.motion.y < 687) && (event.motion.y > 632))
-                                {
-                                    dessiner_rectangle_5(rendu, 100, 632, 160, 55);
-                                    rendu_modifie = SDL_TRUE;
+                                    if (boutton_retour.mouseInside)
+                                    {
+                                        dessiner_rectangle_5(rendu, boutton_retour.x1, boutton_retour.y1, boutton_retour.x2 - boutton_retour.x1, boutton_retour.y2 - boutton_retour.y1);
+                                    }
                                     SDL_RenderPresent(rendu);
                                 }
 
@@ -7103,7 +8282,7 @@ void application_CRC_2D(SDL_Renderer *rendu)
                                     case SDL_MOUSEBUTTONDOWN:
                                         if (event.button.button == SDL_BUTTON_LEFT)
                                         {
-                                            if ((event.button.x < 260) && (event.button.x > 100) && (event.button.y < 687) && (event.motion.y > 632))
+                                            if ((event.button.x < boutton_retour.x2) && (event.button.x > boutton_retour.x1) && (event.button.y < boutton_retour.y2) && (event.motion.y > boutton_retour.y1))
                                                 oui_non = SDL_FALSE;
                                         }
                                         continue;
@@ -7148,5 +8327,3 @@ FIN_CRC:
 /********************************************************************************/
 /********************************************************************************/
 /********************************************************************************/
-
-#endif

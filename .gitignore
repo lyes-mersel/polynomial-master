@@ -1,2 +1,19 @@
-# misc
+# CMake build directory
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Docker-related files
+*.container
+*.log
+
+# Object files and binaries
+*.o
+*.out
+*.exe
+
+#Misc
 .DS_Store
+

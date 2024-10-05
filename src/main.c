@@ -1,23 +1,14 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-#ifdef _WIN32
-#include <windows.h>
-#include <tchar.h>
-#endif
+// #include <stdlib.h>
+// #include <stdio.h>
+// #include <string.h>
+// #include <math.h>
+// #ifdef _WIN32
+// #include <windows.h>
+// #include <tchar.h>
+// #endif
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_image.h>
-
-#include "Console.c"
-#include "Mode_Graphique.c"
-#include "Biblio.h"
-#include "Biblio_Graphique.h"
-
-void Passage_Console();
-void Passage_2D();
+#include "terminal_mode.h"
+#include "graphic_mode.h"
 
 int main(int argc, char *argv[])
 {
@@ -62,7 +53,7 @@ int main(int argc, char *argv[])
     switch (choix)
     {
     case 1:
-        Passage_Console();
+        Passage_Terminal();
         break;
 
     case 2:

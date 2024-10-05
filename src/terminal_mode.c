@@ -1,7 +1,6 @@
-#include "Biblio.h"
-#include "Biblio_Graphique.h"
+#include "terminal_mode.h"
 
-void Passage_Console()
+void Passage_Terminal()
 {
     Monome *Tete_Poly1 = NULL, *Tete_Poly2 = NULL, *Tete_Poly3 = NULL, *Tete_Poly4 = NULL;
     LLC_Poly *Tete_Ensemble = NULL, *Maillon_Ensemble = NULL;
@@ -37,7 +36,7 @@ DEBUT:
     printf("|                                                                                                |\n");
     printf("|          Votre choix ----->                                                                    |\n");
     printf("|________________________________________________________________________________________________|\n");
-    Locate(30 ,27);
+    Locate(30, 27);
     scanf("%d", &choix);
     clearScreen();
 
@@ -51,7 +50,7 @@ DEBUT:
         printf("\n Operation reussit \n\n");
         systemPause();
         break;
-    
+
     /********************************************************************************/
     case 2:
         // Afficher la liste des polynomes
@@ -100,12 +99,12 @@ DEBUT:
             Tete_Poly1 = copie_poly(Maillon_Ensemble->adr1);
             printf("\n Operation reussit, voici le resultat : \n\n");
             ecrit_poly(Tete_Poly1);
-        COPIE:      
+        COPIE:
             printf("\n Que voulez vous faire : \n");
             printf("             1 : Pour le rajouter a la fin de la liste \n");
             printf("             2 : Pour revenir au menu principale \n");
             printf(" Votre choix ---> ");
-            scanf("%d",&choix);
+            scanf("%d", &choix);
             switch (choix)
             {
             case 1:
@@ -161,7 +160,7 @@ DEBUT:
                 Maillon_Ensemble->adr1 = Tete_Poly1;
                 printf("\n Operation reussit \n\n");
                 break;
-            
+
             case 3:
                 printf("\n");
                 break;
@@ -188,10 +187,11 @@ DEBUT:
         }
         else
         {
+            float nb_reel = 0;
             printf(" La valeur  --->  ");
-            scanf("%d", &nombre);
+            scanf("%f", &nb_reel);
             printf("\n Evaluation reussit : \n");
-            printf("  Voici le resultat  --->  %.3f \n\n", eval_poly(Maillon_Ensemble->adr1, nombre));
+            printf("  Voici le resultat  --->  %.3f \n\n", eval_poly(Maillon_Ensemble->adr1, nb_reel));
         }
         systemPause();
         break;
@@ -368,7 +368,7 @@ DEBUT:
             Tete_Poly1 = Maillon_Ensemble->adr1;
             printf("\n Veuillez taper le numero du polynome diviseur  ---> ");
             scanf("%d", &nombre);
-            
+
             Maillon_Ensemble = adr_maillon_ens(Tete_Ensemble, nombre);
             if (Maillon_Ensemble == NULL)
                 printf("\n Y a rien a diviser !\n\n");
@@ -413,7 +413,7 @@ DEBUT:
 
     /********************************************************************************/
     case 11:
-        //Deriver un polynome
+        // Deriver un polynome
         printf("Deriver un polynome : \n");
         ecrit_ensemble_poly(Tete_Ensemble);
         printf("\n Veuillez taper le numero du polynome a diriver ---> ");
@@ -539,7 +539,7 @@ DEBUT:
                 break;
             }
             puiss = (float)(nb_pos(G) - 1);
-            puis = (long long) powf(10, puiss);
+            puis = (long long)powf(10, puiss);
             MOT1 = MOT * puis;
             Poly_G = entier_vers_poly(G);
             Poly_MOT = entier_vers_poly(MOT1);
@@ -579,9 +579,8 @@ DEBUT:
                 MOT = poly_vers_entier(Poly_MOT);
                 if (MOT == 0)
                     printf("\n Il n'y a pas d'erreurs ! \n\n");
-                else 
+                else
                     printf("\n Y a une erreur ! \n\n");
-                
             }
             break;
 
@@ -599,7 +598,7 @@ DEBUT:
     default:
         break;
     }
-    
+
     goto DEBUT;
 
     return;

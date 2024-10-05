@@ -5,11 +5,15 @@ program.exe
 Dockerfile
 .dockerignore
 
+# CMake build directory
+build/
+
 # Git
 .git
 
 # Read me
 README.md
 
-# misc
+# Others
 .DS_Store
+.vscode

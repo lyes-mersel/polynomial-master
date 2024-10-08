@@ -660,7 +660,7 @@ Monome *primitive_poly(Monome *P_tete)
 // Executer la commande clear de la console (windows + linux)
 void clearScreen()
 {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
     // Windows implementation using system("cls")
     system("CLS");
 #else
@@ -675,7 +675,7 @@ void clearScreen()
 // Attendre la validation du user pour continuer
 void systemPause()
 {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
     // Windows implementation using system("cls")
     system("PAUSE");
 #else
@@ -691,7 +691,7 @@ void systemPause()
 // Changer la postion du curseur dans un Terminal
 void Locate(int x, int y)
 {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
     // Windows implementation using system("cls")
     HANDLE H = GetStdHandle(STD_OUTPUT_HANDLE);
     COORD C;

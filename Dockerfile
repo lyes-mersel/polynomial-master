@@ -11,7 +11,9 @@ RUN apk update && apk add --no-cache \
     mesa-dri-gallium \
     libx11-dev
 
-ENV DISPLAY=:0
+ENV DISPLAY=:host.docker.internal:0
+ENV XDG_RUNTIME_DIR=/tmp
+ENV LIBGL_ALWAYS_SOFTWARE=1
 
 WORKDIR /home/polynomial-master
 

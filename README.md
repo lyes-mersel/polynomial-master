@@ -56,7 +56,7 @@ For a more convenient setup, leverage the provided Dockerfile to run the project
     ```
     **Windows (requires Xming server):**
     ```bash
-    docker run --rm -it -e DISPLAY=:0 --volume /tmp/.X11-unix:/tmp/.X11-unix poly
+    docker run --rm -it -e DISPLAY=:0 --volume /tmp/.X11-unix:/tmp/.X11-unix polynomial-master
     ```
 
 #### Note:

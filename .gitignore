@@ -16,7 +16,7 @@ Makefile
 
 # Others
 .DS_Store
-.vscode
+.vscode/
 *.cmake
 *.swp
 *.tmp

@@ -1,19 +1,25 @@
-# The compiled program
-program.exe
+# Compiled program(s) for the host system
+*.exe
 
-# Docker
+# Docker related files
 Dockerfile
 .dockerignore
 
-# CMake build directory
+# Build artifacts
 build/
 
-# Git
+# Documentation:
+docs/
+
+# Screenshots
+screenshots/
+
+# Version control
 .git
 
 # Read me
 README.md
 
-# Others
+# Common hidden files
 .DS_Store
-.vscode
+.vscode/

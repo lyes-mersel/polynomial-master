@@ -1,4 +1,4 @@
-# polynomial-master
+# Polynomial Master
 
 **A C project for manipulating polynomials using linked lists**
 

@@ -76,6 +76,20 @@ For Windows users running the container, installing and launching the Xming serv
 | ![](./screenshots/7.png) | ![](./screenshots/8.png) | ![](./screenshots/9.png) |
 
 
+## Contributing
+We welcome contributions to Edutainment! If you'd like to contribute, please follow these steps:
+1. Fork the repository.
+2. Create a new branch.
+3. Make your changes.
+4. Commit your changes.
+5. Push to the branch.
+6. Create a pull request.
+
+
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+
 ## Developer Information
 - Website - [Portfolio](https://lyes-mersel.netlify.app)
 - Github - [@lyes-mersel](https://github.com/lyes-mersel)

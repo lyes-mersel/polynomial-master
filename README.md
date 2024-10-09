@@ -58,9 +58,14 @@ For a more convenient setup, leverage the provided Dockerfile to run the project
     ```bash
     docker run --rm -it -e DISPLAY=:0 --volume /tmp/.X11-unix:/tmp/.X11-unix polynomial-master
     ```
-
-#### Note:
+**Note:**
 For Windows users running the container, installing and launching the Xming server is a prerequisite.
+
+
+## Project Components
+- **C Programming Language:** Forms the foundation for the project's functionalities.
+- **CMake:** Streamlines the build process across different platforms.
+- **SDL2, SDL2_image, SDL2_ttf:** Libraries utilized for graphics and user interface elements.
 
 
 ## Screenshots
@@ -69,12 +74,6 @@ For Windows users running the container, installing and launching the Xming serv
 | ![](./screenshots/1.png) | ![](./screenshots/2.png) | ![](./screenshots/3.png) |
 | ![](./screenshots/4.png) | ![](./screenshots/5.png) | ![](./screenshots/6.png) |
 | ![](./screenshots/7.png) | ![](./screenshots/8.png) | ![](./screenshots/9.png) |
-
-
-## Project Components
-- **C Programming Language:** Forms the foundation for the project's functionalities.
-- **CMake:** Streamlines the build process across different platforms.
-- **SDL2, SDL2_image, SDL2_ttf:** Libraries utilized for graphics and user interface elements.
 
 
 ## Developer Information
